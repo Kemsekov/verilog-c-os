@@ -6,26 +6,18 @@
 module riscv_virtual_system (
     input clk,
     input rst_n,
-    
-    // Memory interface
-    output [31:0] mem_addr,
-    output [31:0] mem_wdata,
-    input [31:0] mem_rdata,
-    output [3:0] mem_wstrb,
-    output mem_we,
-    output mem_re,
-    input mem_ready,
-    
+
     // UART interface (simple)
     output uart_tx,
     input uart_rx,
-    
+
     // Interrupts
     input [31:0] interrupts,
-    
+
     // System control
     output [31:0] pc_out,
-    output halted
+    output halted,
+    output loading_complete
 );
 
     // Internal signals
@@ -36,11 +28,11 @@ module riscv_virtual_system (
     wire core_mem_we;
     wire core_mem_re;
     wire core_mem_ready;
-    
+
     wire [31:0] core_interrupts;
     wire [31:0] core_pc_out;
     wire core_halted;
-    
+
     // Memory interface signals for the core
     wire [31:0] core_mem_d_data_rd;
     wire core_mem_d_accept;
@@ -67,6 +59,61 @@ module riscv_virtual_system (
     wire core_mem_i_flush;
     wire core_mem_i_invalidate;
     wire [31:0] core_mem_i_pc;
+
+    // Program loader signals
+    wire [31:0] prog_load_addr;
+    wire [31:0] prog_load_wdata;
+    wire prog_load_we;
+    wire prog_loading_done;
+
+    // Memory controller signals
+    wire [31:0] mem_addr;
+    wire [31:0] mem_wdata;
+    wire [31:0] mem_rdata;
+    wire [3:0] mem_wstrb;
+    wire mem_we;
+    wire mem_re;
+    wire mem_ready;
+
+    // Program loader - loads program into memory at startup
+    program_loader u_prog_loader (
+        .clk(clk),
+        .rst_n(rst_n),
+        .mem_addr(prog_load_addr),
+        .mem_wdata(prog_load_wdata),
+        .mem_we(prog_load_we),
+        .loading_done(prog_loading_done)
+    );
+
+    // Memory controller
+    memory_controller u_memory_controller (
+        .clk(clk),
+        .rst_n(rst_n),
+
+        // CPU Interface (from RISC-V core)
+        .cpu_addr(core_mem_addr),
+        .cpu_wdata(core_mem_wdata),
+        .cpu_rdata(core_mem_rdata),
+        .cpu_wstrb(core_mem_wstrb),
+        .cpu_we(core_mem_we),
+        .cpu_re(core_mem_re),
+        .cpu_ready(core_mem_ready),
+
+        // Program loader interface (takes priority during loading)
+        .prog_addr(prog_load_addr),
+        .prog_wdata(prog_load_wdata),
+        .prog_we(prog_load_we),
+        .prog_loading_done(prog_loading_done),
+
+        // External memory interface (not used in this simple implementation)
+        .ext_addr(),
+        .ext_wdata(),
+        .ext_rdata(32'h0),
+        .ext_wstrb(),
+        .ext_we(),
+        .ext_re(),
+        .ext_ready(1'b1)
+    );
 
     // Instantiate the RISC-V core (using ultraembedded's core)
     riscv_core #(
@@ -122,16 +169,16 @@ module riscv_virtual_system (
     );
 
     // Connect core signals to external interface
-    assign core_mem_d_data_rd = mem_rdata;
+    assign core_mem_d_data_rd = core_mem_rdata;
     assign core_mem_d_accept = 1'b1;  // Always accept
-    assign core_mem_d_ack = mem_ready;
+    assign core_mem_d_ack = core_mem_ready;
     assign core_mem_d_error = 1'b0;  // No errors in simple implementation
     assign core_mem_d_resp_tag = 11'h0;  // Dummy tag
 
     assign core_mem_i_accept = 1'b1;  // Always accept
-    assign core_mem_i_valid = mem_ready;
+    assign core_mem_i_valid = core_mem_ready;
     assign core_mem_i_error = 1'b0;  // No errors in simple implementation
-    assign core_mem_i_inst = mem_rdata;
+    assign core_mem_i_inst = core_mem_rdata;
 
     assign core_reset_vector = 32'h0000_0000;  // Start at address 0
     assign core_cpu_id = 32'h0000_0000;  // Single core
@@ -147,22 +194,13 @@ module riscv_virtual_system (
     // Debug outputs
     assign core_pc_out = core_mem_i_pc;
     assign core_halted = 1'b0;  // Core never halts in this simple implementation
-    
-    // Simple memory arbiter/router
-    assign core_mem_rdata = mem_rdata;
-    assign core_mem_ready = mem_ready;
-    
-    assign mem_addr = core_mem_addr;
-    assign mem_wdata = core_mem_wdata;
-    assign mem_wstrb = core_mem_wstrb;
-    assign mem_we = core_mem_we;
-    assign mem_re = core_mem_re;
-    
+
     // Connect interrupts (simplified)
     assign core_interrupts = interrupts;
-    
+
     // Output monitoring
     assign pc_out = core_pc_out;
     assign halted = core_halted;
+    assign loading_complete = prog_loading_done;
 
 endmodule

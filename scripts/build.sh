@@ -14,24 +14,25 @@ mkdir -p build
 echo "Compiling design..."
 iverilog -o build/riscv_virtual_device_enhanced \
   -I src \
-  src/riscv_alu.v \
-  src/riscv_core.v \
-  src/riscv_csr.v \
-  src/riscv_csr_regfile.v \
-  src/riscv_decode.v \
-  src/riscv_decoder.v \
-  src/riscv_defs.v \
-  src/riscv_divider.v \
-  src/riscv_exec.v \
-  src/riscv_fetch.v \
-  src/riscv_issue.v \
-  src/riscv_lsu.v \
-  src/riscv_mmu.v \
-  src/riscv_multiplier.v \
-  src/riscv_pipe_ctrl.v \
-  src/riscv_regfile.v \
-  src/riscv_trace_sim.v \
-  src/riscv_xilinx_2r1w.v \
+  -I third_party/ultraembedded_riscv \
+  third_party/ultraembedded_riscv/riscv_alu.v \
+  third_party/ultraembedded_riscv/riscv_core.v \
+  third_party/ultraembedded_riscv/riscv_csr.v \
+  third_party/ultraembedded_riscv/riscv_csr_regfile.v \
+  third_party/ultraembedded_riscv/riscv_decode.v \
+  third_party/ultraembedded_riscv/riscv_decoder.v \
+  third_party/ultraembedded_riscv/riscv_defs.v \
+  third_party/ultraembedded_riscv/riscv_divider.v \
+  third_party/ultraembedded_riscv/riscv_exec.v \
+  third_party/ultraembedded_riscv/riscv_fetch.v \
+  third_party/ultraembedded_riscv/riscv_issue.v \
+  third_party/ultraembedded_riscv/riscv_lsu.v \
+  third_party/ultraembedded_riscv/riscv_mmu.v \
+  third_party/ultraembedded_riscv/riscv_multiplier.v \
+  third_party/ultraembedded_riscv/riscv_pipe_ctrl.v \
+  third_party/ultraembedded_riscv/riscv_regfile.v \
+  third_party/ultraembedded_riscv/riscv_trace_sim.v \
+  third_party/ultraembedded_riscv/riscv_xilinx_2r1w.v \
   src/memory_controller.v \
   src/program_loader.v \
   src/riscv_virtual_system.v \

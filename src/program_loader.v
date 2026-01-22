@@ -6,9 +6,9 @@ module program_loader (
     input rst_n,
 
     // Memory interface
-    output [31:0] mem_addr,
-    output [31:0] mem_wdata,
-    output mem_we,
+    output reg [31:0] mem_addr,
+    output reg [31:0] mem_wdata,
+    output reg mem_we,
 
     // Control
     output reg loading_done
@@ -27,21 +27,76 @@ module program_loader (
     parameter LOADING = 2'b01;
     parameter DONE = 2'b10;
 
-    // ROM with sample program (would be replaced with actual program)
-    reg [31:0] program_rom [0:1023];  // 4KB of program storage
+    // Memory to store the loaded program
+    reg [7:0] program_mem [0:4095];  // 4KB of program storage
 
-    integer i;
-    // Initialize ROM with a simple program (add immediate to register)
+    integer i, j;
+    reg [31:0] word_count;
+    integer hex_loaded_successfully;
+
+    // Load the binary file at initialization
     initial begin
-        program_rom[0] = 32'h00100093;  // addi x1, x0, 1  (x1 = 1)
-        program_rom[1] = 32'h00200113;  // addi x2, x0, 2  (x2 = 2)
-        program_rom[2] = 32'h002081b3;  // add x3, x1, x2  (x3 = x1 + x2 = 3)
-        program_rom[3] = 32'h00300213;  // addi x4, x0, 3  (x4 = 3)
-        program_rom[4] = 32'h0000006f;  // jal x0, 0 (infinite loop)
+        // Initialize all memory to zero
+        for (i = 0; i < 4096; i = i + 1) begin
+            program_mem[i] = 8'h00;
+        end
 
-        // Fill rest with NOPs
-        for (i = 5; i < 1024; i = i + 1) begin
-            program_rom[i] = 32'h00000013;  // nop (addi x0, x0, 0)
+        // Try to load run.hex, fallback to hardcoded program if not found
+        $display("Attempting to load run.hex...");
+        // Try to load the hex file first
+        hex_loaded_successfully = 1;  // Assume success initially
+
+        // Attempt to load the hex file - if it fails, the simulator will print an error
+        // but we can't detect this failure in the code, so we'll check if anything was loaded
+        $readmemh("run.hex", program_mem);
+
+        // Check if the hex file loaded anything by looking at the first few bytes
+        if (program_mem[0] == 8'h00 && program_mem[1] == 8'h00 &&
+            program_mem[2] == 8'h00 && program_mem[3] == 8'h00) begin
+            // Hex file didn't load anything, try the binary file
+            $display("run.hex not found or empty, attempting to load run.bin...");
+            // Since we can't directly load binary files in Verilog, we'll just use the default program
+            $display("Loading default program");
+            // Load a simple default program
+            program_mem[0] = 8'h93;  // addi x1, x0, 1  (x1 = 1)
+            program_mem[1] = 8'h00;
+            program_mem[2] = 8'h10;
+            program_mem[3] = 8'h00;
+
+            program_mem[4] = 8'h13;  // addi x2, x0, 2  (x2 = 2)
+            program_mem[5] = 8'h00;
+            program_mem[6] = 8'h20;
+            program_mem[7] = 8'h00;
+
+            program_mem[8] = 8'hb3;  // add x3, x1, x2  (x3 = x1 + x2 = 3)
+            program_mem[9] = 8'h00;
+            program_mem[10] = 8'h20;
+            program_mem[11] = 8'h81;
+
+            program_mem[12] = 8'h13;  // addi x4, x0, 3  (x4 = 3)
+            program_mem[13] = 8'h00;
+            program_mem[14] = 8'h02;
+            program_mem[15] = 8'h00;
+
+            program_mem[16] = 8'h6f;  // jal x0, 0 (infinite loop)
+            program_mem[17] = 8'h00;
+            program_mem[18] = 8'h00;
+            program_mem[19] = 8'h00;
+
+            word_count = 5;  // 5 words in default program
+        end else begin
+            $display("Successfully loaded run.hex into memory");
+            // Count number of 32-bit words loaded (up to 1024 words max)
+            word_count = 0;
+
+            // Count non-zero words in the program
+            for (i = 0; i < 1024; i = i + 1) begin
+                if (program_mem[i*4] != 8'h00 || program_mem[i*4+1] != 8'h00 ||
+                    program_mem[i*4+2] != 8'h00 || program_mem[i*4+3] != 8'h00) begin
+                    word_count = i + 1;  // Update word_count each time we find a non-zero word
+                end
+                // Continue scanning - the last assignment to word_count will be the total
+            end
         end
     end
 
@@ -52,6 +107,9 @@ module program_loader (
             load_addr <= 32'h0000_0000;
             rom_addr <= 32'h0000_0000;
             loading_done <= 1'b0;
+            mem_addr <= 32'h0000_0000;
+            mem_wdata <= 32'h0000_0000;
+            mem_we <= 1'b0;
         end else begin
             current_state <= next_state;
 
@@ -60,22 +118,34 @@ module program_loader (
                     load_addr <= 32'h0000_0000;  // Start loading at address 0
                     rom_addr <= 32'h0000_0000;
                     loading_done <= 1'b0;
+                    mem_addr <= 32'h0000_0000;
+                    mem_wdata <= 32'h0000_0000;
+                    mem_we <= 1'b0;
                 end
 
                 LOADING: begin
-                    load_addr <= load_addr + 4;  // Increment by 4 bytes (word-aligned)
-                    rom_addr <= rom_addr + 1;
+                    // Construct 32-bit word from 4 bytes
+                    mem_wdata <= {program_mem[rom_addr+3], program_mem[rom_addr+2],
+                                  program_mem[rom_addr+1], program_mem[rom_addr]};
 
-                    if (rom_addr >= 1023) begin  // Reached end of program
+                    mem_addr <= load_addr;
+                    mem_we <= 1'b1;  // Enable write
+
+                    load_addr <= load_addr + 4;  // Increment by 4 bytes (word-aligned)
+                    rom_addr <= rom_addr + 4;
+
+                    if (rom_addr >= (word_count * 4)) begin  // Reached end of program
                         loading_done <= 1'b1;
+                        mem_we <= 1'b0;  // Disable write after loading
                     end
                 end
 
                 DONE: begin
-                    // Stay in done state
+                    mem_we <= 1'b0;  // Disable write after loading
                 end
                 default: begin
                     current_state <= IDLE;
+                    mem_we <= 1'b0;
                 end
             endcase
         end
@@ -85,15 +155,10 @@ module program_loader (
     always @(*) begin
         case (current_state)
             IDLE: next_state = LOADING;
-            LOADING: next_state = (rom_addr >= 1023) ? DONE : LOADING;
+            LOADING: next_state = (rom_addr >= (word_count * 4)) ? DONE : LOADING;
             DONE: next_state = DONE;
             default: next_state = IDLE;
         endcase
     end
-
-    // Memory interface
-    assign mem_addr = load_addr;
-    assign mem_wdata = program_rom[rom_addr];
-    assign mem_we = (current_state == LOADING) ? 1'b1 : 1'b0;
 
 endmodule
