@@ -6,7 +6,7 @@ A simple RISC-V virtual device implementation using Verilog and Icarus Verilog s
 
 The virtual device consists of:
 - RISC-V RV32IM core (based on ultraembedded/riscv)
-- Memory controller with 64KB RAM and 64KB ROM
+- Memory controller with 64KB RAM
 - Simple UART interface
 - Basic interrupt support
 - Program loader for initializing with compiled code
@@ -16,8 +16,8 @@ The virtual device consists of:
 - `src/` - Source code for the RISC-V core and virtual device
 - `tb/` - Testbenches for verification
 - `scripts/` - Build and simulation scripts
-- `programs/` - Sample programs and firmware
-- `docs/` - Documentation
+- `run_c_program/` - C program compilation and execution scripts
+- `third_party/` - Third-party RISC-V core files (ultraembedded/riscv)
 
 ## Dependencies
 
@@ -41,6 +41,30 @@ The virtual device consists of:
    ./scripts/build.sh
    ```
 
+## Running C Programs
+
+To compile and run C programs on the virtual device:
+
+1. Install RISC-V toolchain:
+   ```bash
+   # On Ubuntu/Debian
+   sudo apt-get install gcc-riscv64-unknown-elf
+   # or
+   sudo apt-get install gcc-riscv32-unknown-elf
+   ```
+
+2. Navigate to the C program directory and run:
+   ```bash
+   cd run_c_program
+   bash run_program.sh
+   ```
+
+   This script will:
+   - Compile your C program to RISC-V assembly/ELF
+   - Convert to binary format
+   - Copy the binary to the parent directory
+   - Run the RISC-V virtual device simulation with your program
+
 ## Integration with C Compiler and OS
 
 This virtual device is designed to work with:
@@ -49,18 +73,11 @@ This virtual device is designed to work with:
 
 ### C Compiler Integration
 
-To compile C programs for the virtual device:
-```bash
-# Install RISC-V toolchain
-sudo apt-get install gcc-riscv32-unknown-elf
-
-# Compile a C program
-riscv32-unknown-elf-gcc -march=rv32im -mabi=ilp32 -nostdlib -nostartfiles \
-    -T link_script.ld program.c -o program.elf
-riscv32-unknown-elf-objcopy -O binary program.elf program.bin
-
-# The binary can then be loaded into the virtual device's memory
-```
+The `run_c_program/run_program.sh` script automates the entire process:
+- Compiles C source to RISC-V ELF object file
+- Converts ELF to binary format
+- Copies binary to simulation directory
+- Runs the virtual device simulation with the compiled program
 
 ### xv6 OS Integration
 
@@ -72,7 +89,7 @@ The virtual device can be extended to support xv6 with additional hardware featu
 ## Memory Map
 
 - `0x0000_0000 - 0x0000_FFFF`: 64KB RAM
-- `0x1000_0000 - 0x1000_FFFF`: 64KB ROM
+- `0x1000_0000 - 0x1000_FFFF`: Reserved for ROM (currently unused)
 - `0x2000_0000 - 0x2000_0FFF`: UART registers
 
 ## Current Status
@@ -80,8 +97,9 @@ The virtual device can be extended to support xv6 with additional hardware featu
 - [x] Basic RISC-V core integration
 - [x] Memory controller implementation
 - [x] Simple UART interface
-- [x] C compiler integration (workflow documented)
+- [x] C compiler integration (with automated workflow)
 - [x] xv6 OS integration (framework prepared)
 - [x] Program loading mechanism
 - [x] Complete documentation
 - [x] Working simulation
+- [x] Automated C program compilation and execution
