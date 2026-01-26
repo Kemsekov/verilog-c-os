@@ -1,13 +1,10 @@
 int main() {
-    int a = 5;
-    int b = 10;
-    int flag = a<10;
-    int c = a;
-    if(flag){
-        c+=b;
-    }
-    else{
-        c += b/a;
-    }
-    return c;
+    // Completely different program to test if changes affect simulation
+    int x = 100;
+    int y = 200;
+    int z = x * y;  // Different computation
+    int result = z + x - y;
+
+    // Return a different value to see if it affects simulation
+    return result;  // This will return 100*200 + 100 - 200 = 19900
 }

@@ -88,9 +88,17 @@ module riscv_core
     ,output          mem_i_flush_o
     ,output          mem_i_invalidate_o
     ,output [ 31:0]  mem_i_pc_o
+    // Exposed signals for register monitoring
+    ,output [  4:0]  rd0_idx_o
+    ,output [ 31:0]  rd0_value_o
+    ,output          rd0_writeback_valid_o
 );
 
 wire           mmu_lsu_writeback_w;
+// Exposed signals for register monitoring
+wire [4:0]  rd0_idx_w;
+wire [31:0] rd0_value_w;
+wire        rd0_writeback_valid_w;
 wire  [  1:0]  fetch_in_priv_w;
 wire  [  4:0]  mul_opcode_rd_idx_w;
 wire           mmu_flush_w;
@@ -601,6 +609,16 @@ u_issue
     ,.mul_hold_o(mul_hold_w)
     ,.interrupt_inhibit_o(interrupt_inhibit_w)
 );
+
+// Connect to the internal pipe_ctrl module signals
+assign rd0_idx_w = u_issue.pipe_rd_wb_w;
+assign rd0_value_w = u_issue.pipe_result_wb_w;
+assign rd0_writeback_valid_w = |u_issue.pipe_rd_wb_w;  // Valid when register index is non-zero
+
+// Connect the internal signals to the exposed outputs
+assign rd0_idx_o = rd0_idx_w;
+assign rd0_value_o = rd0_value_w;
+assign rd0_writeback_valid_o = rd0_writeback_valid_w;
 
 
 riscv_fetch

@@ -13,14 +13,12 @@ module riscv_virtual_device_enhanced (
 
     // Debug interface
     output [31:0] debug_pc,
-    output debug_halted,
     output loading_complete
 );
 
     // Internal connections
     wire [31:0] interrupts;
     wire [31:0] pc_out;
-    wire halted;
 
     // Instantiate the virtual system (includes CPU, memory controller, and program loader)
     riscv_virtual_system u_system (
@@ -35,13 +33,11 @@ module riscv_virtual_device_enhanced (
         .interrupts(32'h0000_0000),
 
         // Debug
-        .pc_out(pc_out),
-        .halted(halted)
+        .pc_out(pc_out)
     );
 
-    // Debug outputs
+    // Pass through signals
     assign debug_pc = pc_out;
-    assign debug_halted = halted;
     assign loading_complete = u_system.loading_complete;  // Get the signal from the system module
 
 endmodule

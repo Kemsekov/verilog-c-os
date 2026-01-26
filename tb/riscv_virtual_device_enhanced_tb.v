@@ -7,16 +7,15 @@ module riscv_virtual_device_enhanced_tb;
 
     reg clk;
     reg rst_n;
-    
+
     // UART signals (for monitoring)
     wire uart_tx;
     reg uart_rx = 1'b1;  // Idle high
-    
+
     // Debug signals
     wire [31:0] debug_pc;
-    wire debug_halted;
     wire loading_complete;
-    
+
     // Instantiate the enhanced device
     riscv_virtual_device_enhanced uut (
         .clk(clk),
@@ -24,16 +23,15 @@ module riscv_virtual_device_enhanced_tb;
         .uart_tx(uart_tx),
         .uart_rx(uart_rx),
         .debug_pc(debug_pc),
-        .debug_halted(debug_halted),
         .loading_complete(loading_complete)
     );
-    
+
     // Clock generation
     initial begin
         clk = 0;
         forever #5 clk = ~clk;  // 10ns period = 100MHz
     end
-    
+
     // Test sequence
     initial begin
         // Initialize
@@ -41,34 +39,24 @@ module riscv_virtual_device_enhanced_tb;
         $display("Starting RISC-V Virtual Device Test...");
         #100;
         rst_n = 1;
-        
+
         // Wait for program loading to complete
         wait(loading_complete);
         $display("Program loading completed at time %0t", $time);
-        
-        // Run for a while to see CPU execution
-        #5000;
-        
-        // Monitor for a few cycles
-        repeat(1000) begin
-            #10;
-            if (debug_halted) begin
-                $display("CPU halted at PC: 0x%08h", debug_pc);
-            end
-        end
-        
-        // End simulation
-        #1000;
-        $display("Test completed.");
+
+        // Run for a predetermined number of cycles
+        #10000;
+
+        $display("Test completed. Final PC: 0x%08h", debug_pc);
         $finish;
     end
-    
+
     // Monitor key signals
     initial begin
-        $monitor("Time: %0t, Loading Done: %b, PC: 0x%08h, Halted: %b", 
-                 $time, loading_complete, debug_pc, debug_halted);
+        $monitor("Time: %0t, Loading Done: %b, PC: 0x%08h",
+                 $time, loading_complete, debug_pc);
     end
-    
+
     // Dump waves for viewing in waveform viewer
     initial begin
         $dumpfile("riscv_virtual_device_enhanced.vcd");

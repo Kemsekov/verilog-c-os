@@ -7,11 +7,16 @@ echo "==========================================="
 echo "RISC-V Virtual Device - C Program Runner"
 echo "==========================================="
 
-# Define file paths
+# Create build directory
+BUILD_DIR="../build"
+mkdir -p $BUILD_DIR
+
+# Define file paths in build directory
 SOURCE_FILE="run.c"
-ELF_FILE="run.elf"
-BIN_FILE="run.bin"
-LINKER_SCRIPT="link_script.ld"
+ELF_FILE="$BUILD_DIR/run.elf"
+BIN_FILE="$BUILD_DIR/run.bin"
+HEX_FILE="$BUILD_DIR/run.hex"
+LINKER_SCRIPT="$BUILD_DIR/link_script.ld"
 
 echo ""
 echo "Step 1: Checking for RISC-V toolchain..."
@@ -60,7 +65,6 @@ EOF
     echo "✓ Converted to binary: $BIN_FILE"
 
     # Also create a hex file for the simulator
-    HEX_FILE="run.hex"
     echo "   Command: $OBJCOPY -O verilog $ELF_FILE $HEX_FILE"
     $OBJCOPY -O verilog $ELF_FILE $HEX_FILE
     echo "✓ Converted to hex: $HEX_FILE"
@@ -74,10 +78,8 @@ EOF
     hexdump -C $BIN_FILE | head -10
 
     echo ""
-    echo "Step 6: Copying binary and hex files to simulation directory..."
-    cp $BIN_FILE ../
-    cp $HEX_FILE ../
-    echo "✓ Copied $BIN_FILE and $HEX_FILE to parent directory for simulation"
+    echo "Step 6: Using hex file from build directory for simulation..."
+    echo "✓ Hex file already in build directory: $HEX_FILE"
 
     echo ""
     echo "Step 7: Running RISC-V virtual device simulation..."
@@ -85,6 +87,16 @@ EOF
     echo ""
     cd ..
     ./scripts/build.sh
+
+    # Clean up temporary files in build directory
+    echo ""
+    echo "Step 8: Cleaning up temporary files..."
+    rm -f ../build/run.elf ../build/run.bin ../build/link_script.ld
+    echo "✓ Cleaned up temporary files in build directory"
+
+    # Also clean up the hex file from build directory after simulation
+    rm -f ../build/run.hex
+    echo "✓ Cleaned up run.hex from build directory"
 
 else
     echo "❌ We cannot run C file compilation and simulation without RISC-V installation"

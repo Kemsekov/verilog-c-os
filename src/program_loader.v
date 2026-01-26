@@ -46,9 +46,9 @@ module program_loader (
         // Try to load the hex file first
         hex_loaded_successfully = 1;  // Assume success initially
 
-        // Attempt to load the hex file - if it fails, the simulator will print an error
+        // Attempt to load the hex file from build directory - if it fails, the simulator will print an error
         // but we can't detect this failure in the code, so we'll check if anything was loaded
-        $readmemh("run.hex", program_mem);
+        $readmemh("build/run.hex", program_mem);
 
         // Check if the hex file loaded anything by looking at the first few bytes
         if (program_mem[0] == 8'h00 && program_mem[1] == 8'h00 &&

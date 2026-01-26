@@ -14,9 +14,17 @@ module riscv_virtual_system (
     // Interrupts
     input [31:0] interrupts,
 
+    // Memory interface
+    output [31:0] mem_addr,
+    output [31:0] mem_wdata,
+    input [31:0] mem_rdata,
+    output [3:0] mem_wstrb,
+    output mem_we,
+    output mem_re,
+    input mem_ready,
+
     // System control
     output [31:0] pc_out,
-    output halted,
     output loading_complete
 );
 
@@ -31,7 +39,11 @@ module riscv_virtual_system (
 
     wire [31:0] core_interrupts;
     wire [31:0] core_pc_out;
-    wire core_halted;
+
+    // Register monitoring signals
+    wire [4:0]  core_rd0_idx;
+    wire [31:0] core_rd0_value;
+    wire        core_rd0_write_valid;
 
     // Memory interface signals for the core
     wire [31:0] core_mem_d_data_rd;
@@ -66,15 +78,6 @@ module riscv_virtual_system (
     wire prog_load_we;
     wire prog_loading_done;
 
-    // Memory controller signals
-    wire [31:0] mem_addr;
-    wire [31:0] mem_wdata;
-    wire [31:0] mem_rdata;
-    wire [3:0] mem_wstrb;
-    wire mem_we;
-    wire mem_re;
-    wire mem_ready;
-
     // Program loader - loads program into memory at startup
     program_loader u_prog_loader (
         .clk(clk),
@@ -105,14 +108,14 @@ module riscv_virtual_system (
         .prog_we(prog_load_we),
         .prog_loading_done(prog_loading_done),
 
-        // External memory interface (not used in this simple implementation)
-        .ext_addr(),
-        .ext_wdata(),
-        .ext_rdata(32'h0),
-        .ext_wstrb(),
-        .ext_we(),
-        .ext_re(),
-        .ext_ready(1'b1)
+        // External memory interface (connected to module ports)
+        .ext_addr(mem_addr),
+        .ext_wdata(mem_wdata),
+        .ext_rdata(mem_rdata),
+        .ext_wstrb(mem_wstrb),
+        .ext_we(mem_we),
+        .ext_re(mem_re),
+        .ext_ready(mem_ready)
     );
 
     // Instantiate the RISC-V core (using ultraembedded's core)
@@ -165,7 +168,12 @@ module riscv_virtual_system (
         .mem_i_rd_o(core_mem_i_rd),
         .mem_i_flush_o(core_mem_i_flush),
         .mem_i_invalidate_o(core_mem_i_invalidate),
-        .mem_i_pc_o(core_mem_i_pc)
+        .mem_i_pc_o(core_mem_i_pc),
+
+        // Register monitoring outputs
+        .rd0_idx_o(core_rd0_idx),
+        .rd0_value_o(core_rd0_value),
+        .rd0_writeback_valid_o(core_rd0_write_valid)
     );
 
     // Connect core signals to external interface
@@ -193,14 +201,13 @@ module riscv_virtual_system (
 
     // Debug outputs
     assign core_pc_out = core_mem_i_pc;
-    assign core_halted = 1'b0;  // Core never halts in this simple implementation
 
     // Connect interrupts (simplified)
     assign core_interrupts = interrupts;
 
     // Output monitoring
     assign pc_out = core_pc_out;
-    assign halted = core_halted;
     assign loading_complete = prog_loading_done;
+
 
 endmodule
