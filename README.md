@@ -106,8 +106,9 @@ The virtual device can be extended to support xv6 with additional hardware featu
 
 ## Modifications to Third-Party Libraries
 
-The following modifications have been made to the ultraembedded/riscv core to support return value capture and improved halt detection:
+The following modifications have been made to improve the virtual device:
 
-- Modified riscv_core.v to expose register writeback signals for monitoring
-- Added register monitoring capabilities to capture return values from register x10 (a0)
-- Improved halt detection logic to prevent oscillation
+- Removed problematic halt detection mechanism that was causing issues
+- Removed non-functional cycle_count and cpu_return_value monitoring
+- Improved file organization to keep build artifacts in build/ directory
+- Streamlined C program compilation workflow

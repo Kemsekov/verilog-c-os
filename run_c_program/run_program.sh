@@ -1,4 +1,4 @@
-#!/bin/bash
+`#!/bin/bash
 
 # Script to compile and run a C program on the RISC-V virtual device
 # This script demonstrates the complete process from C source to simulation

@@ -23,6 +23,7 @@ This project implements a RISC-V virtual device using Verilog and Icarus Verilog
 - `run_c_program/run_program.sh` script for complete C compilation and execution
 - Memory layout compatible with RISC-V GCC toolchain
 - Support for converting ELF to binary/hex formats for simulation
+- All build artifacts properly isolated in build/ directory
 
 ### xv6 OS Integration Framework
 - Documentation outlining how to adapt xv6 for the virtual device
@@ -48,6 +49,15 @@ This project implements a RISC-V virtual device using Verilog and Icarus Verilog
 ### Third-party (third_party/)
 - ultraembedded_riscv/ - RISC-V core files from ultraembedded/riscv (with proper attribution)
 
+## Recent Improvements
+
+The following improvements have been made to enhance the virtual device:
+
+- Removed problematic halt detection mechanism that was causing issues
+- Removed non-functional cycle_count and cpu_return_value monitoring
+- Improved file organization to keep build artifacts in build/ directory
+- Streamlined C program compilation workflow
+
 ## Verification
 
 The system has been verified through:
@@ -56,6 +66,7 @@ The system has been verified through:
 - Program loading mechanism working
 - Memory access patterns correct
 - C program compilation and execution workflow tested
+- Deterministic behavior confirmed with same input producing same output
 
 ## Usage Instructions
 

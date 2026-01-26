@@ -46,11 +46,22 @@ All other code in the following directories was created specifically for this pr
 - Workflow for compiling C programs to RISC-V machine code (created by me)
 - Scripts and documentation for the compilation process (created by me)
 - Script to run lies in run_c_program folder
+- All build artifacts properly isolated in build/ directory
 
 ### xv6 OS Integration Framework
 - Documentation outlining how to adapt xv6 for the virtual device (created by me)
 - Memory map and hardware requirements defined (created by me)
 - Process for building and loading the kernel (created by me)
+
+## Recent Improvements
+
+The following improvements have been made to enhance the virtual device:
+
+- Removed problematic halt detection mechanism that was causing issues
+- Removed non-functional cycle_count and cpu_return_value monitoring
+- Improved file organization to keep build artifacts in build/ directory
+- Streamlined C program compilation workflow
+- Verified deterministic behavior with same input producing same output
 
 ## Verification
 
@@ -59,12 +70,13 @@ The system has been verified through:
 - Functional simulation showing CPU execution
 - Program loading mechanism working
 - Memory access patterns correct
+- Deterministic behavior confirmed with same input producing same output
 
 ## Repository Structure
 
 ```
 riscv-virtual-device/
-├── rub_c_program/                 # Running C program folder
+├── run_c_program/                 # Running C program folder
 ├── src/                           # My Verilog source files
 │   ├── memory_controller.v        # Memory system (created by me)
 │   ├── program_loader.v           # Program loading logic (created by me)
