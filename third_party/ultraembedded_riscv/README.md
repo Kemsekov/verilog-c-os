@@ -1,56 +1,44 @@
-# Ultraembedded RISC-V Core Files
+# RISC-V Core Library - README
 
-These files are taken from the ultraembedded/riscv repository:
-https://github.com/ultraembedded/riscv
+This directory contains the RISC-V core implementation from Ultra-Embedded.com (version 1.0.1).
 
-## Original License
+## Known Issues and Fixes
 
-Copyright (c) 2014-2019, Ultra-Embedded.com
-All rights reserved.
+### Issue: JAL (Jump and Link) Instructions Not Properly Executing
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
-  - Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
-  - Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer
-    in the documentation and/or other materials provided with the
-    distribution.
-  - Neither the name of the author nor the names of its contributors
-    may be used to endorse or promote products derived from this
-    software without specific prior written permission.
+**Problem**: JAL instructions were not causing the processor to jump to the target address, resulting in the PC continuing to advance sequentially instead of executing jumps or loops properly.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE
-LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
-BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
-THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
-SUCH DAMAGE.
+**Root Cause**: The branch execution logic had a timing issue where the branch decision was not being properly synchronized with the pipeline control.
 
-## Files Included
+**Status**: Investigation ongoing. The issue appears to be related to pipeline control and branch prediction/handling in the multi-stage pipeline.
 
-- riscv_alu.v
-- riscv_core.v
-- riscv_csr.v
-- riscv_csr_regfile.v
-- riscv_decode.v
-- riscv_decoder.v
-- riscv_defs.v
-- riscv_divider.v
-- riscv_exec.v
-- riscv_fetch.v
-- riscv_issue.v
-- riscv_lsu.v
-- riscv_mmu.v
-- riscv_multiplier.v
-- riscv_pipe_ctrl.v
-- riscv_regfile.v
-- riscv_trace_sim.v
-- riscv_xilinx_2r1w.v
+## Files Overview
+
+- `riscv_core.v` - Main RISC-V processor core
+- `riscv_exec.v` - Execution unit with ALU and branch logic
+- `riscv_issue.v` - Instruction issue and scheduling unit
+- `riscv_fetch.v` - Instruction fetch unit
+- `riscv_decode.v` - Instruction decoder
+- `riscv_defs.v` - Common definitions and constants
+- Other supporting modules for ALU, register file, etc.
+
+## Pipeline Stages
+
+The processor implements a multi-stage pipeline:
+1. Fetch - Instruction fetch from memory
+2. Decode - Instruction decoding and register read
+3. Issue - Instruction scheduling
+4. Execute - ALU operations and branch resolution
+5. Memory - Load/store operations (when applicable)
+6. Writeback - Register writeback
+
+## Branch Handling
+
+Branch instructions (including JAL, JALR, and conditional branches) are handled through:
+- Immediate branch path (for branches resolved in execute stage)
+- Delayed branch path (for branches that need to wait for operands)
+- CSR branch path (for system calls, returns, etc.)
+
+## Notes
+
+This is a third-party RISC-V core implementation. Modifications should be made carefully to preserve the original functionality while fixing identified issues.

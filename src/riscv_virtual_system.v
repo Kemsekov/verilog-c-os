@@ -118,6 +118,9 @@ module riscv_virtual_system (
         .ext_ready(mem_ready)
     );
 
+    // CPU enable signal - only allow CPU to run after program loading is complete
+    wire cpu_enable = prog_loading_done;
+
     // Instantiate the RISC-V core (using ultraembedded's core)
     riscv_core #(
         .SUPPORT_SUPER(1),
@@ -131,7 +134,7 @@ module riscv_virtual_system (
         .MEM_CACHE_ADDR_MAX(32'h0000_FFFF)
     ) u_core (
         .clk_i(clk),
-        .rst_i(~rst_n),  // Note: core uses active high reset
+        .rst_i(~rst_n | ~cpu_enable),  // Hold CPU in reset until loading is complete
 
         // Memory interface - Data
         .mem_d_data_rd_i(core_mem_d_data_rd),

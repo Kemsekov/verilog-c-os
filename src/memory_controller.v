@@ -71,10 +71,7 @@ module memory_controller (
             // Priority given to program loader during loading phase
             if (prog_we && prog_in_ram && !prog_loading_done) begin
                 // Program loader write - always write all 4 bytes since it's word-aligned
-                ram[(prog_addr - RAM_BASE) >> 2][7:0] <= prog_wdata[7:0];
-                ram[(prog_addr - RAM_BASE) >> 2][15:8] <= prog_wdata[15:8];
-                ram[(prog_addr - RAM_BASE) >> 2][23:16] <= prog_wdata[23:16];
-                ram[(prog_addr - RAM_BASE) >> 2][31:24] <= prog_wdata[31:24];
+                ram[(prog_addr - RAM_BASE) >> 2] <= prog_wdata;
             end else if (cpu_we && cpu_ready && cpu_in_ram) begin
                 // CPU write
                 if (cpu_wstrb[0]) ram[(cpu_addr - RAM_BASE) >> 2][7:0] <= cpu_wdata[7:0];
@@ -92,9 +89,12 @@ module memory_controller (
         end
     end
 
-    // Handle reads
+    // Handle reads - only allow CPU to read after loading is complete
     always @(*) begin
-        if (cpu_in_ram) begin
+        if (!prog_loading_done) begin
+            // During loading phase, CPU should get 0s or NOPs to prevent execution
+            cpu_rdata = 32'h00000013;  // NOP instruction (ADDI x0, x0, 0)
+        end else if (cpu_in_ram) begin
             cpu_rdata = ram[(cpu_addr - RAM_BASE) >> 2];
         end else if (cpu_in_rom) begin
             cpu_rdata = rom[(cpu_addr - ROM_BASE) >> 2];

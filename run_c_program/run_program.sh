@@ -1,4 +1,4 @@
-`#!/bin/bash
+#!/bin/bash
 
 # Script to compile and run a C program on the RISC-V virtual device
 # This script demonstrates the complete process from C source to simulation
@@ -13,6 +13,7 @@ mkdir -p $BUILD_DIR
 
 # Define file paths in build directory
 SOURCE_FILE="run.c"
+STARTUP_FILE="crt0.S"  # Startup code file
 ELF_FILE="$BUILD_DIR/run.elf"
 BIN_FILE="$BUILD_DIR/run.bin"
 HEX_FILE="$BUILD_DIR/run.hex"
@@ -22,10 +23,12 @@ echo ""
 echo "Step 1: Checking for RISC-V toolchain..."
 if command -v riscv32-unknown-elf-gcc &> /dev/null; then
     COMPILER="riscv32-unknown-elf-gcc"
+    ASSEMBLER="riscv32-unknown-elf-as"
     OBJCOPY="riscv32-unknown-elf-objcopy"
     echo "✓ Found riscv32-unknown-elf-gcc toolchain"
 elif command -v riscv64-unknown-elf-gcc &> /dev/null; then
     COMPILER="riscv64-unknown-elf-gcc"
+    ASSEMBLER="riscv64-unknown-elf-as"
     OBJCOPY="riscv64-unknown-elf-objcopy"
     echo "✓ Found riscv64-unknown-elf-gcc toolchain"
 else
@@ -35,31 +38,32 @@ fi
 if [ -n "$COMPILER" ]; then
     echo ""
     echo "Step 2: Preparing linker script..."
-    # Create a simple linker script for our virtual device
-    cat > $LINKER_SCRIPT << 'EOF'
-MEMORY
-{
-    ram (rwx) : ORIGIN = 0x00000000, LENGTH = 64K
-}
-
-SECTIONS
-{
-    . = ORIGIN(ram);
-    .text : { *(.text*) } > ram
-    .data : { *(.data*) } > ram
-    .bss : { *(.bss*) } > ram
-}
-EOF
-    echo "✓ Created linker script: $LINKER_SCRIPT"
+    # Copy the linker script to build directory
+    cp "../build/link_script.ld" "$LINKER_SCRIPT"
+    echo "✓ Copied linker script: $LINKER_SCRIPT"
 
     echo ""
-    echo "Step 3: Compiling C source to RISC-V assembly/ELF..."
-    echo "   Command: $COMPILER -march=rv32im -mabi=ilp32 -nostdlib -nostartfiles -T $LINKER_SCRIPT $SOURCE_FILE -o $ELF_FILE"
-    $COMPILER -march=rv32im -mabi=ilp32 -nostdlib -nostartfiles -T $LINKER_SCRIPT $SOURCE_FILE -o $ELF_FILE
-    echo "✓ Compiled successfully: $ELF_FILE"
+    echo "Step 3: Assembling startup code..."
+    STARTUP_OBJ="$BUILD_DIR/crt0.o"
+    echo "   Command: $ASSEMBLER -march=rv32im -mabi=ilp32 ../run_c_program/crt0.S -o $STARTUP_OBJ"
+    $ASSEMBLER -march=rv32im -mabi=ilp32 ../run_c_program/crt0.S -o $STARTUP_OBJ
+    echo "✓ Assembled startup code: $STARTUP_OBJ"
 
     echo ""
-    echo "Step 4: Converting ELF to different formats..."
+    echo "Step 4: Compiling C source to RISC-V assembly/ELF..."
+    C_OBJ="$BUILD_DIR/run.o"
+    echo "   Command: $COMPILER -march=rv32im -mabi=ilp32 -c ../run_c_program/run.c -o $C_OBJ"
+    $COMPILER -march=rv32im -mabi=ilp32 -c ../run_c_program/run.c -o $C_OBJ
+    echo "✓ Compiled C source: $C_OBJ"
+
+    echo ""
+    echo "Step 5: Linking startup code and C program..."
+    echo "   Command: $COMPILER -march=rv32im -mabi=ilp32 -nostdlib -T $LINKER_SCRIPT $STARTUP_OBJ $C_OBJ -o $ELF_FILE"
+    $COMPILER -march=rv32im -mabi=ilp32 -nostdlib -T $LINKER_SCRIPT $STARTUP_OBJ $C_OBJ -o $ELF_FILE
+    echo "✓ Linked successfully: $ELF_FILE"
+
+    echo ""
+    echo "Step 6: Converting ELF to different formats..."
     echo "   Command: $OBJCOPY -O binary $ELF_FILE $BIN_FILE"
     $OBJCOPY -O binary $ELF_FILE $BIN_FILE
     echo "✓ Converted to binary: $BIN_FILE"
@@ -70,7 +74,7 @@ EOF
     echo "✓ Converted to hex: $HEX_FILE"
 
     echo ""
-    echo "Step 5: Displaying binary information..."
+    echo "Step 7: Displaying binary information..."
     echo "   Size of binary file:"
     ls -la $BIN_FILE
     echo ""
@@ -78,11 +82,11 @@ EOF
     hexdump -C $BIN_FILE | head -10
 
     echo ""
-    echo "Step 6: Using hex file from build directory for simulation..."
+    echo "Step 8: Using hex file from build directory for simulation..."
     echo "✓ Hex file already in build directory: $HEX_FILE"
 
     echo ""
-    echo "Step 7: Running RISC-V virtual device simulation..."
+    echo "Step 9: Running RISC-V virtual device simulation..."
     echo "   This will execute your C program on the virtual RISC-V processor"
     echo ""
     cd ..
@@ -90,8 +94,8 @@ EOF
 
     # Clean up temporary files in build directory
     echo ""
-    echo "Step 8: Cleaning up temporary files..."
-    rm -f ../build/run.elf ../build/run.bin ../build/link_script.ld
+    echo "Step 10: Cleaning up temporary files..."
+    rm -f ../build/run.elf ../build/run.bin ../build/crt0.o ../build/run.o
     echo "✓ Cleaned up temporary files in build directory"
 
     # Also clean up the hex file from build directory after simulation
@@ -112,8 +116,10 @@ fi
 echo ""
 echo "==========================================="
 echo "C Program Runner Process Explained:"
-echo "1. C source code -> RISC-V compiler -> ELF object file"
-echo "2. ELF file -> objcopy -> raw binary file"
-echo "3. Binary file -> loaded into virtual memory -> RISC-V processor execution"
-echo "4. Processor executes instructions -> produces results -> simulation output"
+echo "1. Startup code (crt0.S) -> assembled to object file"
+echo "2. C source code -> RISC-V compiler -> object file"
+echo "3. Object files -> linked with linker script -> ELF executable"
+echo "4. ELF file -> objcopy -> raw binary/hex file"
+echo "5. Binary file -> loaded into virtual memory -> RISC-V processor execution"
+echo "6. Processor executes instructions -> produces results -> simulation output"
 echo "==========================================="

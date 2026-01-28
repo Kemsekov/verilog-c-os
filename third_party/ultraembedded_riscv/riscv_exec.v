@@ -91,7 +91,7 @@ begin
     imm20_r     = {opcode_opcode_i[31:12], 12'b0};
     imm12_r     = {{20{opcode_opcode_i[31]}}, opcode_opcode_i[31:20]};
     bimm_r      = {{19{opcode_opcode_i[31]}}, opcode_opcode_i[31], opcode_opcode_i[7], opcode_opcode_i[30:25], opcode_opcode_i[11:8], 1'b0};
-    jimm20_r    = {{12{opcode_opcode_i[31]}}, opcode_opcode_i[19:12], opcode_opcode_i[20], opcode_opcode_i[30:25], opcode_opcode_i[24:21], 1'b0};
+    jimm20_r    = {{12{opcode_opcode_i[31]}}, opcode_opcode_i[19:12], opcode_opcode_i[20], opcode_opcode_i[30:21], 1'b0};
     shamt_r     = opcode_opcode_i[24:20];
 end
 
@@ -396,7 +396,7 @@ else if (opcode_valid_i)
 begin
     branch_taken_q   <= branch_r && opcode_valid_i & branch_taken_r;
     branch_ntaken_q  <= branch_r && opcode_valid_i & ~branch_taken_r;
-    pc_x_q           <= branch_taken_r ? branch_target_r : opcode_pc_i + 32'd4;
+    pc_x_q           <= (branch_r && branch_taken_r) ? branch_target_r : opcode_pc_i + 32'd4;
     branch_call_q    <= branch_r && opcode_valid_i && branch_call_r;
     branch_ret_q     <= branch_r && opcode_valid_i && branch_ret_r;
     branch_jmp_q     <= branch_r && opcode_valid_i && branch_jmp_r;
