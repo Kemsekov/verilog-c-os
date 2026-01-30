@@ -1,114 +1,101 @@
-# RISC-V Virtual Device
-
-A simple RISC-V virtual device implementation using Verilog and Icarus Verilog simulator. This project implements a RISC-V processor capable of running simple C programs and basic operating systems like xv6.
-
-## Architecture
-
-The virtual device consists of:
-- RISC-V RV32IM core (based on ultraembedded/riscv)
-- Memory controller with 64KB RAM
-- Simple UART interface
-- Basic interrupt support
-- Program loader for initializing with compiled code
-
-## Directory Structure
-
-- `src/` - Source code for the RISC-V core and virtual device
-- `tb/` - Testbenches for verification
-- `scripts/` - Build and simulation scripts
-- `run_c_program/` - C program compilation and execution scripts
-- `third_party/` - Third-party RISC-V core files (ultraembedded/riscv)
+Majority of code is taken from library:
+https://github.com/ultraembedded/riscv
 
 ## Dependencies
 
-- Icarus Verilog (`iverilog` and `vvp`)
-- RISC-V GCC toolchain (for compiling C programs) - optional but recommended
+The following dependencies are required to run the RISC-V simulation environment:
 
-## Building and Running
+### Build Dependencies
+- **RISC-V GCC Toolchain**: `gcc-riscv64-unknown-elf` or `gcc-riscv32-unknown-elf`
+- **SystemC**: Version 2.3.1 or compatible
+- **Verilator**: For Verilog RTL simulation
+- **Build Tools**: `make`, `g++`, `libelf-dev`, `binutils-dev`
 
-1. Install Icarus Verilog:
-   ```bash
-   # On Ubuntu/Debian
-   sudo apt-get install iverilog
+### Installation on Ubuntu/Debian:
+```bash
+# Install RISC-V toolchain
+sudo apt-get install gcc-riscv64-unknown-elf
 
-   # On macOS with Homebrew
-   brew install icarus-verilog
-   ```
+# Install SystemC
+wget https://github.com/accellera-official/systemc/releases/download/2.3.3/systemc-2.3.3.tar.gz
+tar -xzf systemc-2.3.3.tar.gz
+cd systemc-2.3.3
+mkdir build && cd build
+../configure --prefix=/usr/local/systemc-2.3.1
+make && sudo make install
 
-2. Run the simulation:
-   ```bash
-   cd riscv-virtual-device
-   ./scripts/build.sh
-   ```
+# Install Verilator
+sudo apt-get install verilator
 
-## Running C Programs
+# Install build dependencies
+sudo apt-get install build-essential libelf-dev binutils-dev
+```
 
-To compile and run C programs on the virtual device:
+Testbench have been reworked a bit.
 
-1. Install RISC-V toolchain:
-   ```bash
-   # On Ubuntu/Debian
-   sudo apt-get install gcc-riscv64-unknown-elf
-   # or
-   sudo apt-get install gcc-riscv32-unknown-elf
-   ```
+## Changes Made to Project
 
-2. Navigate to the C program directory and run:
-   ```bash
-   cd run_c_program
-   bash run_program.sh
-   ```
+### To work with new verilator version:
+- Updated testbench to handle newer Verilator API requirements
+- Fixed CSR access mechanisms to work with newer SystemC/Verilator versions
+- Modified trace enable mechanism to work after simulation elaboration
+- Updated memory access patterns to avoid invalid memory access errors
 
-   This script will:
-   - Compile your C program to RISC-V assembly/ELF
-   - Convert to binary format
-   - Copy the binary to the parent directory
-   - Run the RISC-V virtual device simulation with your program
+### To track verilog operations:
+- Enabled detailed VCD waveform generation for internal processor signals
+- Added support for both SystemC-level and Verilator-level tracing
+- Created separate VCD files for top-level signals and internal processor signals
+- Waveforms now show detailed internal processor activity including PC, registers, ALU operations, etc.
 
-## Integration with C Compiler and OS
+### Other changes made to project:
+- Created `run_c` directory with complete C program simulation infrastructure
+- Developed startup code and linker scripts for RISC-V programs
+- Implemented simulation control primitives for program exit and output
+- Added comprehensive Makefile with targets for both ISA and Verilog simulation
+- Fixed compatibility issues with newer versions of Verilator and SystemC
+- Created automated script for running C programs on both simulators
 
-This virtual device is designed to work with:
-- RISC-V GCC toolchain (for compiling C programs)
-- xv6 operating system (for basic OS functionality)
+## Implemented Features
 
-### C Compiler Integration
+### run_c Folder
+The `run_c` folder contains a complete infrastructure for running C programs on the RISC-V simulator:
 
-The `run_c_program/run_program.sh` script automates the entire process:
-- Compiles C source to RISC-V ELF object file
-- Converts ELF to binary format
-- Copies binary to simulation directory
-- Runs the virtual device simulation with the compiled program
+- **Purpose**: Compile and run C programs on both the ISA simulator and Verilog RTL simulation
+- **Contents**:
+  - `run.c`: Template C program that performs computation
+  - `startup.s`: Assembly startup code and interrupt handlers
+  - `link_script.ld`: Linker script for placing code at appropriate addresses
+  - `Makefile`: Complete build system for compilation and simulation
+  - `run_c_program.sh`: Automated script to run C programs on both simulators
 
-### xv6 OS Integration
+### Usage
+To run a C program:
+```bash
+bash run_c_program.sh my_program.c
+```
 
-The virtual device can be extended to support xv6 with additional hardware features:
-- Timer for scheduling
-- More memory for kernel and processes
-- Enhanced interrupt system
+This will:
+1. Compile the C program to RISC-V ELF
+2. Run it on the ISA simulator (fast C++ model)
+3. Run it on the Verilog RTL simulator (cycle-accurate hardware model)
+4. Generate VCD waveform files showing internal processor signals
+5. Save all results to the `build/` directory
 
-## Memory Map
+### run_c/build Directory
+The `build/` directory contains all output files after running a simulation:
 
-- `0x0000_0000 - 0x0000_FFFF`: 64KB RAM
-- `0x1000_0000 - 0x1000_FFFF`: Reserved for ROM (currently unused)
-- `0x2000_0000 - 0x2000_0FFF`: UART registers
+- `program.elf`: RISC-V executable file
+- `program.disasm`: Disassembly of the compiled program
+- `program_isa.log`: Log from ISA simulator with execution statistics
+- `program_verilog.log`: Log from Verilog RTL simulator
+- `program_sysc_wave.vcd`: VCD waveform with top-level signals
+- `program_verilator.vcd`: VCD waveform with internal processor signals (PC, registers, ALU, etc.)
 
-## Current Status
+### Simulation Modes
+The system runs programs on two different simulators:
 
-- [x] Basic RISC-V core integration
-- [x] Memory controller implementation
-- [x] Simple UART interface
-- [x] C compiler integration (with automated workflow)
-- [x] xv6 OS integration (framework prepared)
-- [x] Program loading mechanism
-- [x] Complete documentation
-- [x] Working simulation
-- [x] Automated C program compilation and execution
+1. **ISA Simulator**: Fast C++ model that executes instructions quickly, shows execution statistics
+2. **Verilog RTL Simulator**: Cycle-accurate hardware simulation that generates detailed waveforms showing internal processor operation
 
-## Modifications to Third-Party Libraries
+Both simulators execute the same program and produce consistent results, allowing for both fast development and detailed hardware analysis.
 
-The following modifications have been made to improve the virtual device:
-
-- Removed problematic halt detection mechanism that was causing issues
-- Removed non-functional cycle_count and cpu_return_value monitoring
-- Improved file organization to keep build artifacts in build/ directory
-- Streamlined C program compilation workflow
