@@ -68,6 +68,38 @@ The `run_c` folder contains a complete infrastructure for running C programs on 
   - `Makefile`: Complete build system for compilation and simulation
   - `run_c_program.sh`: Automated script to run C programs on both simulators
 
+### xv6_riscv_rv32 Folder
+The `xv6_riscv_rv32` folder contains a simplified xv6-like OS kernel that runs on the RISC-V simulation infrastructure:
+
+- **Purpose**: Demonstrate OS-like functionality on the 32-bit RISC-V simulation platform
+- **Contents**:
+  - `xv6_kernel.c`: Simplified xv6-like kernel with basic OS functionality
+  - `startup.s`: Assembly startup code for 32-bit compatibility
+  - `link_script.ld`: Linker script for proper memory layout
+  - `Makefile`: Build system with targets for both ISA and Verilog simulation
+  - `run_xv6.sh`: Automation script to run simulations
+  - `build/`: Directory for build artifacts including ELF files and VCD waveforms
+
+#### xv6-like Kernel Features:
+- Process table management with basic process states
+- Memory allocation system with a simple memory pool
+- Process creation and tracking functionality
+- Proper exit mechanism using simulation primitives
+- Compatible with 32-bit RISC-V simulation infrastructure
+
+#### xv6 Simulation Usage:
+```bash
+cd xv6_riscv_rv32
+./run_xv6.sh
+```
+
+This will:
+1. Compile the xv6-like kernel to RISC-V ELF
+2. Run it on the ISA simulator (fast C++ model)
+3. Run it on the Verilog RTL simulator (cycle-accurate hardware model)
+4. Generate VCD waveform files showing internal processor signals during OS execution
+5. Save all results to the `build/` directory
+
 ### Usage
 To run a C program:
 ```bash
@@ -90,6 +122,16 @@ The `build/` directory contains all output files after running a simulation:
 - `program_verilog.log`: Log from Verilog RTL simulator
 - `program_sysc_wave.vcd`: VCD waveform with top-level signals
 - `program_verilator.vcd`: VCD waveform with internal processor signals (PC, registers, ALU, etc.)
+
+### xv6_riscv_rv32/build Directory
+The `build/` directory in the xv6 folder contains all output files after running the OS simulation:
+
+- `xv6_kernel.elf`: RISC-V executable file for the xv6-like kernel
+- `xv6_kernel.disasm`: Disassembly of the compiled kernel
+- `xv6_kernel.o`: Object file for the kernel code
+- `startup.o`: Object file for the assembly startup code
+- `sysc_wave.vcd`: VCD waveform with top-level interface signals
+- `verilator.vcd`: VCD waveform with internal processor signals (PC, registers, ALU operations, etc.)
 
 ### Simulation Modes
 The system runs programs on two different simulators:
