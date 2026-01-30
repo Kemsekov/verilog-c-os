@@ -92,7 +92,7 @@ The kernel uses special CSR writes to communicate with the simulator:
 
 ## Files Created/Modified
 
-### xv6_riscv_rv32 Directory (New Complete Implementation)
+### xv6 Directory (New Complete Implementation)
 - `xv6_kernel.c` - Simplified xv6-like kernel implementation
 - `startup.s` - Assembly startup code for 32-bit compatibility
 - `link_script.ld` - Linker script for proper memory layout
@@ -123,7 +123,7 @@ A convenience script `run_xv6.sh` is provided in the xv6 folder to automate the 
 
 ```bash
 # Navigate to the xv6 folder
-cd xv6_riscv_rv32
+cd xv6
 
 # Make the script executable
 chmod +x run_xv6.sh
@@ -150,7 +150,7 @@ chmod +x run_xv6.sh
 ### Manual Method
 Alternatively, you can use the Makefile targets directly from the xv6 folder:
 ```bash
-cd xv6_riscv_rv32
+cd xv6
 make                    # Build the kernel
 make run_isa_sim        # Run on ISA simulator
 make run_verilog_sim    # Run on Verilog simulation

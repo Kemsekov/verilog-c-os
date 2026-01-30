@@ -68,8 +68,8 @@ The `run_c` folder contains a complete infrastructure for running C programs on 
   - `Makefile`: Complete build system for compilation and simulation
   - `run_c_program.sh`: Automated script to run C programs on both simulators
 
-### xv6_riscv_rv32 Folder
-The `xv6_riscv_rv32` folder contains a simplified xv6-like OS kernel that runs on the RISC-V simulation infrastructure:
+### xv6 Folder
+The `xv6` folder contains a simplified xv6-like OS kernel that runs on the RISC-V simulation infrastructure:
 
 - **Purpose**: Demonstrate OS-like functionality on the 32-bit RISC-V simulation platform
 - **Contents**:
@@ -89,7 +89,7 @@ The `xv6_riscv_rv32` folder contains a simplified xv6-like OS kernel that runs o
 
 #### xv6 Simulation Usage:
 ```bash
-cd xv6_riscv_rv32
+cd xv6
 ./run_xv6.sh
 ```
 
@@ -123,7 +123,7 @@ The `build/` directory contains all output files after running a simulation:
 - `program_sysc_wave.vcd`: VCD waveform with top-level signals
 - `program_verilator.vcd`: VCD waveform with internal processor signals (PC, registers, ALU, etc.)
 
-### xv6_riscv_rv32/build Directory
+### xv6/build Directory
 The `build/` directory in the xv6 folder contains all output files after running the OS simulation:
 
 - `xv6_kernel.elf`: RISC-V executable file for the xv6-like kernel
