@@ -1,5 +1,6 @@
-Majority of code is taken from library:
-https://github.com/ultraembedded/riscv
+This is a project which aims to run simulation of C programs on RISC-V architecture with ISA and Verilog support in the simplest possible way.
+
+Project inherits from https://github.com/ultraembedded/riscv library. We made several updates to the API to support newer versions of Verilator, and we made changes to the test bench to support extensive Verilog logs on CPU instruction execution.
 
 ## Quick Start with Docker Compose
 
