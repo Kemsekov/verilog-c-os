@@ -58,7 +58,8 @@ echo "Running on Verilog RTL simulation (generating VCD waveform)..."
 cd ../top_tcm_axi/tb
 VERILOG_LOG="../../run_c/build/${BASE_NAME}_verilog.log"
 echo "Verilog simulation log will be saved to $VERILOG_LOG"
-make TEST_IMAGE="../../run_c/build/${BASE_NAME}.elf" > /dev/null 2>&1
+VERILOG_BUILD_LOG="../../run_c/build/${BASE_NAME}_verilog_build.log"
+make TEST_IMAGE="../../run_c/build/${BASE_NAME}.elf" > "$VERILOG_BUILD_LOG" 2>&1
 make run TEST_IMAGE="../../run_c/build/${BASE_NAME}.elf" > "$VERILOG_LOG" 2>&1
 VERILOG_EXIT_CODE=$?
 echo "Verilog simulation completed with exit code: $VERILOG_EXIT_CODE"
