@@ -1,0 +1,34 @@
+services:
+  run_c:
+    build:
+      context: .
+      dockerfile: ./docker_image/Dockerfile
+    container_name: run_c
+    volumes:
+      - .:/workspace
+    working_dir: /workspace/run_c
+    command: >
+      bash -c "
+      cd /workspace/run_c && ./run_c_program.sh run.c"
+    environment:
+      - SYSTEMC_HOME=/usr/local/systemc-2.3.4
+      - LD_LIBRARY_PATH=/usr/local/systemc-2.3.4/lib-linux64:/usr/local/systemc-2.3.4/lib64:/usr/lib/x86_64-linux-gnu:/usr/lib64:/usr/lib:$LD_LIBRARY_PATH
+      - PKG_CONFIG_PATH=/usr/local/systemc-2.3.4/lib/pkgconfig:$PKG_CONFIG_PATH
+      - PATH=/opt/riscv/bin:$PATH
+
+  xv6:
+    build:
+      context: .
+      dockerfile: ./docker_image/Dockerfile
+    container_name: xv6
+    volumes:
+      - .:/workspace
+    working_dir: /workspace/xv6
+    command: >
+      bash -c "
+      cd /workspace/xv6 && ./run_xv6.sh"
+    environment:
+      - SYSTEMC_HOME=/usr/local/systemc-2.3.4
+      - LD_LIBRARY_PATH=/usr/local/systemc-2.3.4/lib-linux64:/usr/local/systemc-2.3.4/lib64:/usr/lib/x86_64-linux-gnu:/usr/lib64:/usr/lib:$LD_LIBRARY_PATH
+      - PKG_CONFIG_PATH=/usr/local/systemc-2.3.4/lib/pkgconfig:$PKG_CONFIG_PATH
+      - PATH=/opt/riscv/bin:$PATH

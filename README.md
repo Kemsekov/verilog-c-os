@@ -1,9 +1,25 @@
 Majority of code is taken from library:
 https://github.com/ultraembedded/riscv
 
-## Dependencies
+## Quick Start with Docker Compose
 
-The following dependencies are required to run the RISC-V simulation environment:
+The simplest way to run this project is using Docker Compose, which handles all dependencies automatically:
+
+To run the run_c example:
+```bash
+docker compose up run_c
+```
+
+To run the xv6 example:
+```bash
+docker compose up xv6
+```
+
+These commands will build the Docker image with all necessary dependencies and run the respective examples in containers.
+
+## Dependencies (Manual Installation)
+
+If you prefer to run the project manually without Docker, the following dependencies are required:
 
 ### Build Dependencies
 - **RISC-V GCC Toolchain**: `gcc-riscv64-unknown-elf` or `gcc-riscv32-unknown-elf`
@@ -33,7 +49,7 @@ sudo apt-get install build-essential libelf-dev binutils-dev
 
 Testbench have been reworked a bit.
 
-## Changes Made to Project
+## Changes Made to original RISC-V Project
 
 ### To work with new verilator version:
 - Updated testbench to handle newer Verilator API requirements
