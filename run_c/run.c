@@ -24,24 +24,24 @@ static inline void print(char* ch)
     sim_putc('\n');
 }
 
-inline void int_to_str(int num, char* buffer) {
+void int_to_str(int num, char* buffer) {
     int i = 0;
     int is_negative = 0;
-    
+
     // Handle zero separately
     if (num == 0) {
         buffer[0] = '0';
         buffer[1] = '\0';
         return;
     }
-    
+
     // Convert positive numbers to negative to safely handle INT_MIN
     if (num > 0) {
         num = -num;
     } else {
         is_negative = 1;
     }
-    
+
     // Extract digits (working with negative numbers avoids INT_MIN overflow)
     while (num < 0) {
         int digit = -(num % 10);  // Get positive digit value
@@ -49,16 +49,16 @@ inline void int_to_str(int num, char* buffer) {
         i = i + 1;
         num = num / 10;
     }
-    
+
     // Add negative sign if needed
     if (is_negative == 1) {
         buffer[i] = '-';
         i = i + 1;
     }
-    
+
     // Null terminate
     buffer[i] = '\0';
-    
+
     // Reverse the string in-place using indices
     int start = 0;
     int end = i - 1;
@@ -71,7 +71,7 @@ inline void int_to_str(int num, char* buffer) {
     }
 }
 
-static void put_int(int num){
+static void print_int(int num){
     // Use static allocation to ensure memory is in a known location
     static char buf[256] = {0};
     int_to_str(num,buf);
@@ -83,7 +83,7 @@ int main()
     int iterations = 0;
     int a = 312;
     while(a>1){
-        put_int(a);
+        print_int(a);
         if(a%2==0)
             a/=2;
         else

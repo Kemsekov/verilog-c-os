@@ -54,8 +54,8 @@ _start:
 
     /* Initialize stack pointer */
     /* Use a safe location in memory for stack - start from high memory and go down */
-    lui sp, 0x3      /* Load upper part of address (0x3000) */
-    addi sp, sp, 0   /* Point to 0x3000 as stack top (before bss section) */
+    lui sp, 0x4      /* Load upper part of address (0x4000) */
+    addi sp, sp, 0   /* Point to 0x4000 as stack top, well above program sections */
 
     /* Set up trap vector to a simple handler that just returns */
     la t0, simple_trap_handler

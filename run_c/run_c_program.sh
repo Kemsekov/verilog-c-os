@@ -28,7 +28,7 @@ mkdir -p build
 
 # Compile the C program to RISC-V ELF
 riscv64-unknown-elf-gcc -march=rv32imzicsr -mabi=ilp32 -O2 -ffreestanding -nostdlib -nostartfiles \
-    -T link_script.ld -o "build/${BASE_NAME}.elf" "$INPUT_FILE" utils.c -lgcc
+    -T link_script.ld -o "build/${BASE_NAME}.elf" "$INPUT_FILE" startup.s utils.c -lgcc
 
 if [ $? -ne 0 ]; then
     echo "Compilation failed!"
@@ -48,7 +48,7 @@ ISA_LOG="../run_c/build/${BASE_NAME}_isa.log"
 echo "ISA simulation log will be saved to $ISA_LOG"
 # Temporarily disable exit on error for the simulation
 set +e
-./riscv-sim -f "../run_c/build/${BASE_NAME}.elf" > "$ISA_LOG" 2>&1
+./riscv-sim -b 0x00000000 -s 0x80000 -f "../run_c/build/${BASE_NAME}.elf" > "$ISA_LOG" 2>&1
 ISA_EXIT_CODE=$?
 set -e
 echo "ISA simulation completed with exit code: $ISA_EXIT_CODE"
