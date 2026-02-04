@@ -28,8 +28,11 @@ $(BUILD_DIR)/startup.o: startup.s | $(BUILD_DIR)
 $(BUILD_DIR)/run.o: run.c | $(BUILD_DIR)
 	$(RISCV_GCC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/run.elf: $(BUILD_DIR)/run.o $(BUILD_DIR)/startup.o $(BUILD_DIR)/link.ld
-	$(RISCV_GCC) $(CFLAGS) -T $(BUILD_DIR)/link.ld -o $@ $(BUILD_DIR)/startup.o $< -lgcc
+$(BUILD_DIR)/utils.o: utils.c | $(BUILD_DIR)
+	$(RISCV_GCC) $(CFLAGS) -c $< -o $@
+
+$(BUILD_DIR)/run.elf: $(BUILD_DIR)/run.o $(BUILD_DIR)/startup.o $(BUILD_DIR)/utils.o $(BUILD_DIR)/link.ld
+	$(RISCV_GCC) $(CFLAGS) -T $(BUILD_DIR)/link.ld -o $@ $(BUILD_DIR)/startup.o $(BUILD_DIR)/utils.o $< -lgcc
 	$(RISCV_OBJDUMP) -d $@ > $(BUILD_DIR)/run.disasm
 
 # Linker script for placing code at appropriate address

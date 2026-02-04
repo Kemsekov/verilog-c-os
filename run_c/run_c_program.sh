@@ -28,7 +28,7 @@ mkdir -p build
 
 # Compile the C program to RISC-V ELF
 riscv64-unknown-elf-gcc -march=rv32imzicsr -mabi=ilp32 -O2 -ffreestanding -nostdlib -nostartfiles \
-    -T link_script.ld -o "build/${BASE_NAME}.elf" "$INPUT_FILE" -lgcc
+    -T link_script.ld -o "build/${BASE_NAME}.elf" "$INPUT_FILE" utils.c -lgcc
 
 if [ $? -ne 0 ]; then
     echo "Compilation failed!"
