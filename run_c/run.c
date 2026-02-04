@@ -73,7 +73,7 @@ void int_to_str(int num, char* buffer) {
 
 static void print_int(int num){
     // Use static allocation to ensure memory is in a known location
-    static char buf[256] = {0};
+    char buf[256] = {0};
     int_to_str(num,buf);
     print(buf);
 }
