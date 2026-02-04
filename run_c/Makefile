@@ -22,13 +22,13 @@ $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
 # Compile assembly and C programs to RISC-V ELF
-$(BUILD_DIR)/startup.o: startup.s | $(BUILD_DIR)
+$(BUILD_DIR)/startup.o: lib/startup.s | $(BUILD_DIR)
 	$(RISCV_GCC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/run.o: run.c | $(BUILD_DIR)
 	$(RISCV_GCC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/utils.o: utils.c | $(BUILD_DIR)
+$(BUILD_DIR)/utils.o: lib/utils.c | $(BUILD_DIR)
 	$(RISCV_GCC) $(CFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/run.elf: $(BUILD_DIR)/run.o $(BUILD_DIR)/startup.o $(BUILD_DIR)/utils.o $(BUILD_DIR)/link.ld
@@ -36,8 +36,8 @@ $(BUILD_DIR)/run.elf: $(BUILD_DIR)/run.o $(BUILD_DIR)/startup.o $(BUILD_DIR)/uti
 	$(RISCV_OBJDUMP) -d $@ > $(BUILD_DIR)/run.disasm
 
 # Linker script for placing code at appropriate address
-$(BUILD_DIR)/link.ld: link_script.ld | $(BUILD_DIR)
-	cp link_script.ld $@
+$(BUILD_DIR)/link.ld: lib/link_script.ld | $(BUILD_DIR)
+	cp $< $@
 
 # Run ISA simulator (C++ model)
 run_isa_sim: $(BUILD_DIR)/run.elf
