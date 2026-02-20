@@ -1,0 +1,45 @@
+#! /usr/bin/vvp
+:ivl_version "12.0 (stable)";
+:ivl_delay_selection "TYPICAL";
+:vpi_time_precision + 0;
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/system.vpi";
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/vhdl_sys.vpi";
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/vhdl_textio.vpi";
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/v2005_math.vpi";
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/va_math.vpi";
+S_0x637fb3e81490 .scope module, "check_lui_tb2" "check_lui_tb2" 2 1;
+ .timescale 0 0;
+L_0x755797929018 .functor BUFT 1, C4<000000000000>, C4<0>, C4<0>, C4<0>;
+v0x637fb3e81620_0 .net/2u *"_ivl_2", 11 0, L_0x755797929018;  1 drivers
+v0x637fb3ecce20_0 .net *"_ivl_7", 19 0, L_0x637fb3edd5d0;  1 drivers
+L_0x755797929060 .functor BUFT 1, C4<000000000000>, C4<0>, C4<0>, C4<0>;
+v0x637fb3eccf00_0 .net/2u *"_ivl_8", 11 0, L_0x755797929060;  1 drivers
+v0x637fb3eccfc0_0 .var "i_IR", 31 0;
+v0x637fb3ecd0a0_0 .net "imm20", 19 0, L_0x637fb3ecd390;  1 drivers
+v0x637fb3ecd1d0_0 .net "shifted", 31 0, L_0x637fb3edd440;  1 drivers
+v0x637fb3ecd2b0_0 .net/s "w_se_immedLUI", 31 0, L_0x637fb3edd6c0;  1 drivers
+L_0x637fb3ecd390 .part v0x637fb3eccfc0_0, 12, 20;
+L_0x637fb3edd440 .concat [ 12 20 0 0], L_0x755797929018, L_0x637fb3ecd390;
+L_0x637fb3edd5d0 .part v0x637fb3eccfc0_0, 12, 20;
+L_0x637fb3edd6c0 .concat [ 12 20 0 0], L_0x755797929060, L_0x637fb3edd5d0;
+    .scope S_0x637fb3e81490;
+T_0 ;
+    %pushi/vec4 305418423, 0, 32;
+    %store/vec4 v0x637fb3eccfc0_0, 0, 32;
+    %end;
+    .thread T_0;
+    .scope S_0x637fb3e81490;
+T_1 ;
+    %vpi_call 2 8 "$display", "IR = 0x%08h", v0x637fb3eccfc0_0 {0 0 0};
+    %vpi_call 2 9 "$display", "IR[31:12] = 0x%05h (width 20)", &PV<v0x637fb3eccfc0_0, 12, 20> {0 0 0};
+    %vpi_call 2 10 "$display", "imm20 = 0x%05h", v0x637fb3ecd0a0_0 {0 0 0};
+    %vpi_call 2 11 "$display", "shifted = 0x%08h", v0x637fb3ecd1d0_0 {0 0 0};
+    %vpi_call 2 12 "$display", "w_se_immedLUI = 0x%08h", v0x637fb3ecd2b0_0 {0 0 0};
+    %vpi_call 2 13 "$finish" {0 0 0};
+    %end;
+    .thread T_1;
+# The file index is used to find the file name in the following table.
+:file_names 3;
+    "N/A";
+    "<interactive>";
+    "check_lui2.tb.v";

@@ -163,9 +163,9 @@ u_debug_monitor (
     .i_clk(i_clk),
     .i_reset_n(i_debug_reset_n),
     
-    // CPU signals
+    // CPU signals - use o_IR for raw instruction, not o_instruction
     .i_PC(w_PC),
-    .i_instruction(w_instruction),
+    .i_instruction(w_IR),  // w_IR is the raw 32-bit instruction
     
     // Memory interface signals
     .i_mem_address(w_output_bus_address),

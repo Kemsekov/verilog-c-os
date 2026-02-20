@@ -1,0 +1,85 @@
+#! /usr/bin/vvp
+:ivl_version "12.0 (stable)";
+:ivl_delay_selection "TYPICAL";
+:vpi_time_precision + 0;
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/system.vpi";
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/vhdl_sys.vpi";
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/vhdl_textio.vpi";
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/v2005_math.vpi";
+:vpi_module "/usr/lib/x86_64-linux-gnu/ivl/va_math.vpi";
+S_0x64c05a744350 .scope module, "check_bhw_tb" "check_bhw_tb" 2 1;
+ .timescale 0 0;
+L_0x7061fa3b7018 .functor BUFT 1, C4<100>, C4<0>, C4<0>, C4<0>;
+v0x64c05a7444e0_0 .net/2u *"_ivl_0", 2 0, L_0x7061fa3b7018;  1 drivers
+L_0x7061fa3b70a8 .functor BUFT 1, C4<010>, C4<0>, C4<0>, C4<0>;
+v0x64c05a7684c0_0 .net/2u *"_ivl_10", 2 0, L_0x7061fa3b70a8;  1 drivers
+v0x64c05a7685a0_0 .net *"_ivl_12", 0 0, L_0x64c05a7692f0;  1 drivers
+L_0x7061fa3b70f0 .functor BUFT 1, C4<001>, C4<0>, C4<0>, C4<0>;
+v0x64c05a768640_0 .net/2u *"_ivl_15", 2 0, L_0x7061fa3b70f0;  1 drivers
+v0x64c05a768720_0 .net *"_ivl_17", 0 0, L_0x64c05a769410;  1 drivers
+v0x64c05a768830_0 .net *"_ivl_2", 0 0, L_0x64c05a769110;  1 drivers
+L_0x7061fa3b7138 .functor BUFT 1, C4<00000000>, C4<0>, C4<0>, C4<0>;
+v0x64c05a7688f0_0 .net/2u *"_ivl_20", 7 0, L_0x7061fa3b7138;  1 drivers
+v0x64c05a7689d0_0 .net *"_ivl_22", 7 0, L_0x64c05a7695f0;  1 drivers
+v0x64c05a768ab0_0 .net *"_ivl_24", 7 0, L_0x64c05a769730;  1 drivers
+v0x64c05a768b90_0 .net *"_ivl_26", 7 0, L_0x64c05a7698b0;  1 drivers
+L_0x7061fa3b7060 .functor BUFT 1, C4<011>, C4<0>, C4<0>, C4<0>;
+v0x64c05a768c70_0 .net/2u *"_ivl_5", 2 0, L_0x7061fa3b7060;  1 drivers
+v0x64c05a768d50_0 .net *"_ivl_7", 0 0, L_0x64c05a7691b0;  1 drivers
+v0x64c05a768e10_0 .var "r_bhw", 2 0;
+v0x64c05a768ef0 .array "r_mdr", 3 0, 7 0;
+v0x64c05a769030_0 .net "w_data_to_submodule", 7 0, L_0x64c05a7699f0;  1 drivers
+L_0x64c05a769110 .cmp/eq 3, v0x64c05a768e10_0, L_0x7061fa3b7018;
+L_0x64c05a7691b0 .cmp/eq 3, v0x64c05a768e10_0, L_0x7061fa3b7060;
+L_0x64c05a7692f0 .cmp/eq 3, v0x64c05a768e10_0, L_0x7061fa3b70a8;
+L_0x64c05a769410 .cmp/eq 3, v0x64c05a768e10_0, L_0x7061fa3b70f0;
+v0x64c05a768ef0_3 .array/port v0x64c05a768ef0, 3;
+L_0x64c05a7695f0 .functor MUXZ 8, L_0x7061fa3b7138, v0x64c05a768ef0_3, L_0x64c05a769410, C4<>;
+v0x64c05a768ef0_2 .array/port v0x64c05a768ef0, 2;
+L_0x64c05a769730 .functor MUXZ 8, L_0x64c05a7695f0, v0x64c05a768ef0_2, L_0x64c05a7692f0, C4<>;
+v0x64c05a768ef0_1 .array/port v0x64c05a768ef0, 1;
+L_0x64c05a7698b0 .functor MUXZ 8, L_0x64c05a769730, v0x64c05a768ef0_1, L_0x64c05a7691b0, C4<>;
+v0x64c05a768ef0_0 .array/port v0x64c05a768ef0, 0;
+L_0x64c05a7699f0 .functor MUXZ 8, L_0x64c05a7698b0, v0x64c05a768ef0_0, L_0x64c05a769110, C4<>;
+    .scope S_0x64c05a744350;
+T_0 ;
+    %pushi/vec4 4, 0, 3;
+    %store/vec4 v0x64c05a768e10_0, 0, 3;
+    %end;
+    .thread T_0;
+    .scope S_0x64c05a744350;
+T_1 ;
+    %pushi/vec4 120, 0, 8;
+    %ix/load 4, 0, 0;
+    %flag_set/imm 4, 0;
+    %store/vec4a v0x64c05a768ef0, 4, 0;
+    %pushi/vec4 86, 0, 8;
+    %ix/load 4, 1, 0;
+    %flag_set/imm 4, 0;
+    %store/vec4a v0x64c05a768ef0, 4, 0;
+    %pushi/vec4 52, 0, 8;
+    %ix/load 4, 2, 0;
+    %flag_set/imm 4, 0;
+    %store/vec4a v0x64c05a768ef0, 4, 0;
+    %pushi/vec4 18, 0, 8;
+    %ix/load 4, 3, 0;
+    %flag_set/imm 4, 0;
+    %store/vec4a v0x64c05a768ef0, 4, 0;
+    %vpi_call 2 14 "$display", "r_bhw=3'b100: w_data=%h (expected 78)", v0x64c05a769030_0 {0 0 0};
+    %pushi/vec4 3, 0, 3;
+    %store/vec4 v0x64c05a768e10_0, 0, 3;
+    %vpi_call 2 16 "$display", "r_bhw=3'b011: w_data=%h (expected 56)", v0x64c05a769030_0 {0 0 0};
+    %pushi/vec4 2, 0, 3;
+    %store/vec4 v0x64c05a768e10_0, 0, 3;
+    %vpi_call 2 18 "$display", "r_bhw=3'b010: w_data=%h (expected 34)", v0x64c05a769030_0 {0 0 0};
+    %pushi/vec4 1, 0, 3;
+    %store/vec4 v0x64c05a768e10_0, 0, 3;
+    %vpi_call 2 20 "$display", "r_bhw=3'b001: w_data=%h (expected 12)", v0x64c05a769030_0 {0 0 0};
+    %vpi_call 2 21 "$finish" {0 0 0};
+    %end;
+    .thread T_1;
+# The file index is used to find the file name in the following table.
+:file_names 3;
+    "N/A";
+    "<interactive>";
+    "check_bhw.tb.v";

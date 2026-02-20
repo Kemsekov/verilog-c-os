@@ -186,20 +186,11 @@ module memory_top (
                      (w_synth_16_receive & r_req_synth_16) ? w_synth_16_data_byte :
                      8'h00;
 
-  // Drive output directly from r_mdr_out - no extra registration
-  // The race condition is handled by keeping r_send high for multiple cycles
+  // Drive output directly from r_mdr_out
   assign o_bus_data = {r_mdr_out[3], r_mdr_out[2], r_mdr_out[1], r_mdr_out[0]};
   assign o_bus_DV   = r_send;
 
-  // Debug: show which memory responds
-  always @(posedge i_clk) begin
-    if (w_synth_32_receive) begin
-      $display("[%0t] SYNTH32_RECV: addr=%h, data=%h", $time, w_mar, w_synth_32_data_byte);
-    end
-    if (w_sdram_receive) begin
-      $display("[%0t] SDRAM_RECV: addr=%h, data=%h", $time, w_mar, w_sdram_data_byte);
-    end
-  end
+  wire w_global_receive;
   assign w_global_receive = w_bootloader_receive |
                           w_sdram_receive |
                           w_gpu_receive |
@@ -232,9 +223,12 @@ module memory_top (
   reg sub_status = 1'b0;
   localparam integer TOSEND = 1'b0;
   localparam integer WAITINGFORRESPONSE = 1'b1;
-  
+
   // Flag to trigger r_send pulse after data is stable
   reg r_trigger_send = 1'b0;
+  
+  // Track if current transaction is a READ (need to wait for response)
+  reg r_current_is_read = 1'b0;
 
   wire w_ps2_interrupt_DV;
   wire [7:0] w_ps2_interrupt_data;
@@ -450,8 +444,10 @@ module memory_top (
       r_mar <= i_bus_address;
       r_bhw <= i_bhw;
       r_write <= i_write_notread;
+      r_current_is_read <= !i_write_notread;  // Track if this is a READ
       status <= FETCHING;
       r_counter <= 2'b00;
+      r_trigger_send <= 1'b0;  // Reset trigger
       // Note: Don't capture DV flags here - r_mar just changed, DV signals will update combinationally
       // We'll capture them when the request is actually sent
       
@@ -475,29 +471,37 @@ module memory_top (
         r_req_synth_16 <= w_synth_16_DV;
         sub_status <= WAITINGFORRESPONSE;
       end else if (sub_status == WAITINGFORRESPONSE && w_global_receive) begin
+        // Collect byte BEFORE incrementing counter
+        if (!w_write) r_mdr_out[r_counter] <= w_read_data;
+        
         r_mar <= r_mar + 1;
         r_counter <= r_counter + 1;
         sub_status <= TOSEND;
         r_bhw = r_bhw - 1;  // It is important that this is Blocking assignment
-        if (!w_write) r_mdr_out[r_counter] <= w_read_data;
+        
         if (r_bhw == 3'b000) begin
-          // All bytes received, data is ready
+          // All bytes received
           status <= WAITING;
+          // For READs, trigger send now that data is ready
+          // For WRITEs, keep send low (no data to sample)
+          if (r_current_is_read) begin
+            r_trigger_send <= 1'b1;
+          end
         end
       end
     end
 
-    // Keep r_send high when data is ready (status=WAITING) and we have valid data
-    // This ensures CPU can sample the data at any time
-    if (status == WAITING && r_bhw == 3'b000) begin
+    // Generate r_send pulse when data is ready (READs only)
+    if (r_trigger_send) begin
       r_send <= 1'b1;
+      r_trigger_send <= 1'b0;
     end
     // Clear r_send when new request starts
     if (status == WAITING && i_bus_DV) begin
       r_send <= 1'b0;
     end
     
-    // Clear flags when new request starts (to prepare for new transaction)
+    // Clear flags when new request starts
     if (status == WAITING && i_bus_DV) begin
       r_req_bootloader <= 1'b0;
       r_req_sdram <= 1'b0;
