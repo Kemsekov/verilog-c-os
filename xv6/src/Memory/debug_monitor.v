@@ -43,6 +43,10 @@ module debug_monitor (
     reg data_region_accessed = 1'b0;
     reg mmio_region_accessed = 1'b0;
     
+    // Memory region tracking for debug
+    reg [2:0] last_mem_region = 3'h0;
+    reg [3:0] last_response_region = 4'h0;  // Track which memory responded
+    
     // Initial PC for boot detection
     reg [31:0] initial_PC = 32'h0;
     reg        first_PC_captured = 1'b0;
@@ -118,60 +122,89 @@ module debug_monitor (
     end
     
     // ================================================================
-    // Monitor memory accesses
+    // Monitor memory accesses - sample on negedge to avoid race conditions
     // ================================================================
+    
+    reg [2:0] r_mem_region;  // For region determination
+    reg [31:0] r_expected_word;
+    reg [31:0] r_offset;
+    reg r_match;
+    reg r_mem_DV_delayed;
+    reg [31:0] r_mem_address_delayed;
+    reg [31:0] r_mem_data_delayed;
+    reg r_mem_write_delayed;
+
+    // Delay signals by half cycle to avoid race conditions
+    always @(negedge i_clk) begin
+        r_mem_DV_delayed <= i_mem_DV;
+        r_mem_address_delayed <= i_mem_address;
+        r_mem_data_delayed <= i_mem_data;
+        r_mem_write_delayed <= i_mem_write;
+    end
 
     always @(posedge i_clk) begin
-        if (i_reset_n && i_mem_DV) begin  // Active when reset is HIGH (normal operation)
+        if (i_reset_n && r_mem_DV_delayed) begin  // Use delayed signals
             memory_access_count <= memory_access_count + 1;
 
+            // Determine memory region from address
+            r_mem_region = 3'h0;
+            if (r_mem_address_delayed >= 32'h80000000 && r_mem_address_delayed < 32'h80008000)
+                r_mem_region = 3'h1;  // synth_32 (kernel code)
+            else if (r_mem_address_delayed >= 32'h80008000 && r_mem_address_delayed < 32'h8000c000)
+                r_mem_region = 3'h2;  // synth_16
+            else if (r_mem_address_delayed >= 32'h8000c000 && r_mem_address_delayed < 32'h90000000)
+                r_mem_region = 3'h3;  // sdram (stack/data)
+            else if (r_mem_address_delayed >= 32'h10000000 && r_mem_address_delayed < 32'h10000006)
+                r_mem_region = 3'h4;  // uart
+            else if (r_mem_address_delayed < 32'h00010000)
+                r_mem_region = 3'h5;  // bootloader
+            
+            last_mem_region <= r_mem_region;
+            
             // Check if accessing reference memory region (kernel at 0x80000000)
-            if (i_mem_address >= 32'h80000000 && i_mem_address < 32'h80010000 && reference_mem_loaded) begin
-                reg [31:0] expected_word;
-                reg [31:0] offset;
-                reg match;
+            if (r_mem_address_delayed >= 32'h80000000 && r_mem_address_delayed < 32'h80010000 && reference_mem_loaded) begin
+                r_offset = r_mem_address_delayed - 32'h80000000;
 
-                offset = i_mem_address - 32'h80000000;
-
-                if (offset < 65532) begin
+                if (r_offset < 65532) begin
                     // Build expected 32-bit word from byte array (little-endian)
-                    expected_word = {reference_mem[offset+3], reference_mem[offset+2], 
-                                     reference_mem[offset+1], reference_mem[offset]};
+                    r_expected_word = {reference_mem[r_offset+3], reference_mem[r_offset+2], 
+                                     reference_mem[r_offset+1], reference_mem[r_offset]};
                     
                     // Check for mismatch on reads
-                    match = 1'b1;
-                    if (!i_mem_write && i_mem_data !== expected_word && i_mem_data !== 32'h00000000) begin
+                    r_match = 1'b1;
+                    if (!r_mem_write_delayed && r_mem_data_delayed !== r_expected_word && r_mem_data_delayed !== 32'h00000000) begin
                         mismatch_count <= mismatch_count + 1;
-                        match = 1'b0;
-                        $display("[%0t] MISMATCH: Addr=0x%08h, Got=0x%08h, Expected=0x%08h (from xv6_kernel.hex)", 
-                                 $time, i_mem_address, i_mem_data, expected_word);
+                        r_match = 1'b0;
+                        $display("[%0t] MISMATCH: Addr=0x%08h, Got=0x%08h, Expected=0x%08h, Region=%0d", 
+                                 $time, r_mem_address_delayed, r_mem_data_delayed, r_expected_word, r_mem_region);
                     end
 
                     // Debug output for memory accesses with comparison
                     if (i_enable_debug && i_debug_verbosity >= 2) begin
-                        if (i_mem_write) begin
-                            $display("[%0t] MEM_WRITE: Addr=0x%08h, Data=0x%08h, Expected=0x%08h %s", 
-                                     $time, i_mem_address, i_mem_data, expected_word,
-                                     "[KERNEL]");
+                        if (r_mem_write_delayed) begin
+                            $display("[%0t] MEM_WRITE: Addr=0x%08h, Data=0x%08h, Region=%0d %s", 
+                                     $time, r_mem_address_delayed, r_mem_data_delayed, r_mem_region,
+                                     (r_mem_region == 3'h3) ? "[SDRAM/Stack]" : 
+                                     (r_mem_region == 3'h1) ? "[Kernel]" : "[Other]");
                         end else begin
-                            $display("[%0t] MEM_READ:  Addr=0x%08h, Data=0x%08h, Expected=0x%08h %s", 
-                                     $time, i_mem_address, i_mem_data, expected_word,
-                                     (match || i_mem_data == 32'h00000000) ? "[OK]" : "[DIFF]");
+                            $display("[%0t] MEM_READ:  Addr=0x%08h, Data=0x%08h, Expected=0x%08h, Region=%0d %s", 
+                                     $time, r_mem_address_delayed, r_mem_data_delayed, r_expected_word, r_mem_region,
+                                     (r_match || r_mem_data_delayed == 32'h00000000) ? "[OK]" : "[DIFF]");
                         end
                     end
                 end
             end else if (i_enable_debug && i_debug_verbosity >= 2) begin
                 // Non-kernel memory access (MMIO, etc.)
-                if (i_mem_write) begin
-                    $display("[%0t] MMIO_WRITE: Addr=0x%08h, Data=0x%08h", 
-                             $time, i_mem_address, i_mem_data);
+                if (r_mem_write_delayed) begin
+                    $display("[%0t] MMIO_WRITE: Addr=0x%08h, Data=0x%08h, Region=%0d", 
+                             $time, r_mem_address_delayed, r_mem_data_delayed, r_mem_region);
                 end else begin
-                    $display("[%0t] MMIO_READ:  Addr=0x%08h, Data=0x%08h", 
-                             $time, i_mem_address, i_mem_data);
+                    $display("[%0t] MMIO_READ:  Addr=0x%08h, Data=0x%08h, Region=%0d", 
+                             $time, r_mem_address_delayed, r_mem_data_delayed, r_mem_region);
                 end
             end
 
-            last_mem_addr <= i_mem_address;
+            last_mem_addr <= r_mem_address_delayed;
         end
     end
     

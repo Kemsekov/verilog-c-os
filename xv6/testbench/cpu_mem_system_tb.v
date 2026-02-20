@@ -193,7 +193,8 @@ initial begin
 end
 
 // Monitor important signals (legacy output, kept for compatibility)
-always @(posedge i_clk) begin
+// Sample on negative edge to avoid race condition with memory_top
+always @(negedge i_clk) begin
   if (w_output_bus_DV) begin
     $display("Time: %t, PC: %h, Addr: %h, Data: %h, Write: %b",
              $time, w_PC, w_output_bus_address, w_output_bus_data, w_output_write_notread);
