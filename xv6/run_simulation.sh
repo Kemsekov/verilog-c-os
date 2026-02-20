@@ -75,6 +75,8 @@ iverilog -o cpu_with_mem \
     ../src/Memory/gpio_interface.v \
     ../src/Memory/sdram_controller.v \
     ../src/Memory/sd_card_controller.v \
+    ../src/Memory/debug_monitor.v \
+    -DDEBUG_VERBOSITY=2 \
     -g2012
 
 if [ $? -ne 0 ]; then

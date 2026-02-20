@@ -169,9 +169,9 @@ end
 
 initial begin
   `ifdef SIMULATION
-  #10000000;
+  #1000000;
   `else
-  #200000000; // Longer simulation time for XV6
+  #1000000`; // Longer simulation time for XV6
   `endif
   $finish;
 end

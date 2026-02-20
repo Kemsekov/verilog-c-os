@@ -1,6 +1,11 @@
 `define SIMULATION
 `define XV6
 
+// Debug verbosity: 0=none, 1=PC only, 2=PC+mem, 3=full+decode
+`ifndef DEBUG_VERBOSITY
+  `define DEBUG_VERBOSITY 2
+`endif
+
 module cpu_mem_system_tb;
 
 // Clock
@@ -8,6 +13,13 @@ reg i_clk;
 initial begin
   i_clk = 0;
   forever #5 i_clk = ~i_clk;  // 10ns period = 100MHz
+end
+
+// Debug reset (active LOW, asserted for first 100 cycles)
+reg i_debug_reset_n;
+initial begin
+  i_debug_reset_n = 0;
+  #100 i_debug_reset_n = 1;
 end
 
 // CPU signals
@@ -143,24 +155,47 @@ memory_top memory(
   .o_interrupt(w_interrupt)
 );
 
+// ================================================================
+// Debug Monitor Instance
+// ================================================================
+debug_monitor #()
+u_debug_monitor (
+    .i_clk(i_clk),
+    .i_reset_n(i_debug_reset_n),
+    
+    // CPU signals
+    .i_PC(w_PC),
+    .i_instruction(w_instruction),
+    
+    // Memory interface signals
+    .i_mem_address(w_output_bus_address),
+    .i_mem_data(w_output_bus_data),
+    .i_mem_DV(w_output_bus_DV),
+    .i_mem_write(w_output_write_notread),
+    
+    // Debug output control
+    .i_enable_debug(1'b1),
+    .i_debug_verbosity(`DEBUG_VERBOSITY)
+);
+
 // Initialize memory with kernel data
 initial begin
   // Wait a bit for reset to settle
   #100;
-  
+
   // Set up the MIF file for the synth memories
   #1;
-  
-  #200000000;  // Run for a long time to allow OS boot
-  
+
+  #1000000;  // Run for a long time to allow OS boot
+
   $display("Simulation ended at time %t", $time);
   $finish;
 end
 
-// Monitor important signals
+// Monitor important signals (legacy output, kept for compatibility)
 always @(posedge i_clk) begin
   if (w_output_bus_DV) begin
-    $display("Time: %t, PC: %h, Addr: %h, Data: %h, Write: %b", 
+    $display("Time: %t, PC: %h, Addr: %h, Data: %h, Write: %b",
              $time, w_PC, w_output_bus_address, w_output_bus_data, w_output_write_notread);
   end
 end
