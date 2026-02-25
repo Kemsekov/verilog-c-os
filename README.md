@@ -13,7 +13,7 @@ docker compose up run_c
 
 To run the xv6 example:
 ```bash
-docker compose up xv6
+docker compose up xv6_sim
 ```
 
 These commands will build the Docker image with all necessary dependencies and run the respective examples in containers.

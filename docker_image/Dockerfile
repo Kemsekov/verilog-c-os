@@ -26,6 +26,7 @@ RUN apt-get update && apt-get install -y \
     bzip2 \
     gcc-riscv64-unknown-elf \
     verilator \
+    iverilog \
     && ldconfig \
     && rm -rf /var/lib/apt/lists/*
 

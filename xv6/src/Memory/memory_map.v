@@ -16,16 +16,16 @@ module memory_map (
 );
 
 `ifdef SIMULATION
-  assign o_bootloader_DV = (i_address < 32'h00010000);  //64kB
+  assign o_bootloader_DV = (i_address < 32'h00020000);  // 128kB
 `else
-  assign o_bootloader_DV = 0;  //64kB
+  assign o_bootloader_DV = 0;  // 128kB
 `endif
 
   assign o_xv6_DV = 1'b0;
 
-  assign o_synth_32_DV = (i_address >= 32'h80000000 && i_address < 32'h80008000);
-  assign o_synth_16_DV = (i_address >= 32'h80008000 && i_address < 32'h8000c000);
-  assign o_sdram_DV = (i_address >= 32'h8000c000 && i_address < 32'h90000000);
+  assign o_synth_32_DV = (i_address >= 32'h80000000 && i_address < 32'h80010000);  // 64KB -> 128KB
+  assign o_synth_16_DV = (i_address >= 32'h80010000 && i_address < 32'h80018000);  // 16KB -> 32KB
+  assign o_sdram_DV = (i_address >= 32'h80018000 && i_address < 32'h90000000);
 
   assign o_uart_DV = (i_address >= 32'h10000000 && i_address < 32'h10000006);
 

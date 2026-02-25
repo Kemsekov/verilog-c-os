@@ -16,17 +16,17 @@ services:
       - PKG_CONFIG_PATH=/usr/local/systemc-2.3.4/lib/pkgconfig:$PKG_CONFIG_PATH
       - PATH=/opt/riscv/bin:$PATH
 
-  xv6:
+  xv6_sim:
     build:
       context: .
       dockerfile: ./docker_image/Dockerfile
-    container_name: xv6
+    container_name: xv6_sim
     volumes:
       - .:/workspace
     working_dir: /workspace/xv6
     command: >
       bash -c "
-      cd /workspace/xv6 && ./run_xv6.sh"
+      cd /workspace/xv6 && ./run_simulation.sh"
     environment:
       - SYSTEMC_HOME=/usr/local/systemc-2.3.4
       - LD_LIBRARY_PATH=/usr/local/systemc-2.3.4/lib-linux64:/usr/local/systemc-2.3.4/lib64:/usr/lib/x86_64-linux-gnu:/usr/lib64:/usr/lib:$LD_LIBRARY_PATH

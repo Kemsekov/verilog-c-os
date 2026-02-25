@@ -8,6 +8,43 @@
 **RISCVerilog** project implements a RISC-V CPU on FPGA, based on the RV32IMA_Zicsr ISA with support for user, supervisor, and machine modes, as well as interrupt handling.
 The system is fully capable of booting and running **XV6 OS** from an SD card with filesystem support, and it supports standard UART-based terminal I/O.
 
+## Current Project State
+
+### ✅ Completed Features
+
+- **CPU Core**: Full RV32IMA_Zicsr implementation with 5-stage pipeline
+- **Memory System**: 
+  - Fast internal memory (128KB) for kernel at 0x80000000
+  - SDRAM controller (4MB external memory)
+  - Memory-mapped I/O for all peripherals
+- **I/O Subsystems**:
+  - UART controller with Raspberry Pi Pico bridge
+  - SD card SPI controller for filesystem access
+  - PLIC interrupt controller
+  - PS/2 keyboard (prototype)
+- **XV6 OS Support**: 
+  - Kernel boots and executes successfully
+  - Filesystem image loading from SD card
+  - Interrupt handling and context switching
+- **Simulation Infrastructure**:
+  - Icarus Verilog testbench for cycle-accurate simulation
+  - VCD waveform generation for debugging
+  - Docker support for reproducible builds
+- **Development Tools**:
+  - REMU emulator for hardware-software co-validation
+  - Python scripts for MIF/hex conversion
+  - Automated NOP insertion for pipeline hazard mitigation
+
+### 🔧 Current Workarounds
+
+- **Pipeline Hazard Mitigation**: NOP instructions inserted between all instructions (2x slowdown) to work around race conditions in the current pipeline implementation
+- **Memory Sizes**: Doubled to accommodate NOP-expanded binaries
+
+### 📋 Known Issues
+
+- Pipeline race conditions require NOP buffering between instructions
+- Some peripherals (VGA, PS/2) are prototype-only and currently replaced by UART
+
 ## DEMO
 
 
@@ -35,12 +72,12 @@ CPU Architecture:
 Memory Map:
 -----------
 - Fast internal memory:
-  - Size: 48KB
-  - Address: 0x80000000
+  - Size: 128KB (doubled from 64KB to accommodate NOP-expanded binaries)
+  - Address: 0x80000000 - 0x80010000
   - Purpose: Stores the XV6 kernel image
 - SDRAM (external):
   - Size: 4MB
-  - Address: 0x8000c000
+  - Address: 0x80018000 - 0x90000000
   - Accessed via a custom Verilog SDRAM controller
   - Purpose: Stores dynamic kernel and user memory (heap, stack, page tables)
 - SD card:
@@ -102,3 +139,42 @@ Development Strategy:
 3. Once XV6 booted successfully in REMU, the same kernel image was used on FPGA hardware.
 4. Debugging was performed by comparing REMU logs to hardware output.
 5. LEDs, HEX displays, and UART output were used for tracing issues.
+
+## Quick Start
+
+### Running Simulation (Native)
+
+```bash
+# Install Icarus Verilog
+sudo apt install iverilog
+
+# Run the simulation
+cd xv6
+./run_simulation.sh
+
+# View waveforms (optional)
+gtkwave build/cpu_trace.vcd
+```
+
+### Running Simulation (Docker)
+
+```bash
+# Build and run using Docker Compose
+cd verilog-c-os
+docker compose up xv6_sim
+
+# The VCD file will be generated at xv6/build/cpu_trace.vcd
+```
+
+### Project Structure
+
+```
+xv6/
+├── src/              # Verilog source files (CPU, Memory, UART, etc.)
+├── testbench/        # Simulation testbenches
+├── misc/             # MIF memory initialization files
+├── tools/            # Python conversion scripts
+├── build/            # Output directory (VCD files, logs)
+├── xv6-rv32/         # XV6 OS source and build artifacts
+└── run_simulation.sh # Main simulation script
+```

@@ -261,11 +261,11 @@ module memory_top (
   // Use generic memory instead of Altera-specific one
   cache_altera #(
       .DATA_WIDTH(8),
-      .ADDR_WIDTH(16)
+      .ADDR_WIDTH(17)
   ) bootloader (
       .i_clk(i_clk),
       .i_data(w_data_to_submodule),
-      .i_address(w_mar[15:0]),
+      .i_address(w_mar[16:0]),
       .i_write(w_write),
       .i_request(w_bootloader_DV & r_request),
       .o_data(w_bootloader_data_byte),
@@ -350,7 +350,7 @@ module memory_top (
   plic_mem plic_mem (
       .i_clk(i_clk),
       .i_data(w_data_to_submodule),
-      .i_address(w_mar[31:0]),
+      .i_address(w_mar[23:0]),
       .i_write(w_write),
       .i_request(w_plic_DV & r_request),
       .o_data(w_plic_data_byte),
@@ -369,12 +369,12 @@ module memory_top (
 
   cache_altera #(
       .DATA_WIDTH(8),
-      .ADDR_WIDTH(15),
+      .ADDR_WIDTH(17),
       .INIT_FILE("../tools/xv6_kernel.hex")
   ) synth_32_mem (
       .i_clk(i_clk),
       .i_data(w_data_to_submodule),
-      .i_address(w_mar[14:0]),
+      .i_address(w_mar[16:0]),
       .i_write(w_write),
       .i_request(w_synth_32_DV & r_request),
       .o_data(w_synth_32_data_byte),
@@ -383,12 +383,12 @@ module memory_top (
 
   cache_altera #(
       .DATA_WIDTH(8),
-      .ADDR_WIDTH(14),
+      .ADDR_WIDTH(16),
       .INIT_FILE("")
   ) synth_16_mem (
       .i_clk(i_clk),
       .i_data(w_data_to_submodule),
-      .i_address(w_mar[13:0]),
+      .i_address(w_mar[15:0]),
       .i_write(w_write),
       .i_request(w_synth_16_DV & r_request),
       .o_data(w_synth_16_data_byte),

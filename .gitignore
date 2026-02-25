@@ -5,3 +5,4 @@
 **/*.vcd
 **/*.disasm
 **/*.elf
+riscv_lib/

@@ -90,9 +90,18 @@ echo "Compilation successful!"
 echo "Running the simulation..."
 echo "The CPU will execute the xv6 kernel starting at address 0x80000000"
 echo "Simulation will run for approximately 100 million cycles or until completion"
+echo "VCD waveform output will be saved to: testbench/cpu_trace.vcd"
 echo ""
 
 ./cpu_with_mem
+
+# Create build directory and copy VCD file
+BUILD_DIR="$PROJECT_ROOT/build"
+mkdir -p "$BUILD_DIR"
+if [ -f "$SIM_DIR/cpu_trace.vcd" ]; then
+    cp "$SIM_DIR/cpu_trace.vcd" "$BUILD_DIR/cpu_trace.vcd"
+    echo "VCD waveform file copied to: build/cpu_trace.vcd"
+fi
 
 if [ $? -eq 0 ]; then
     echo ""
@@ -100,6 +109,9 @@ if [ $? -eq 0 ]; then
     echo "Simulation completed successfully!"
     echo "The RISC-V CPU successfully executed the xv6 kernel"
     echo "Check the output above for CPU execution trace"
+    echo "VCD waveform file: testbench/cpu_trace.vcd"
+    echo "VCD waveform file (copy): build/cpu_trace.vcd"
+    echo "Use GTKWave to view: gtkwave build/cpu_trace.vcd"
     echo "==========================================="
 else
     echo ""

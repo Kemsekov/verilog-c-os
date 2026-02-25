@@ -180,6 +180,10 @@ u_debug_monitor (
 
 // Initialize memory with kernel data
 initial begin
+  // Setup VCD dump
+  $dumpfile("cpu_trace.vcd");
+  $dumpvars(0, cpu_mem_system_tb);
+
   // Wait a bit for reset to settle
   #100;
 
