@@ -1,34 +1,117 @@
-This is a project which aims to run simulation of C programs on RISC-V architecture with ISA and Verilog support in the simplest possible way.
+# RISC-V Verilog C OS
 
-Project inherits from https://github.com/ultraembedded/riscv library. We made several updates to the API to support newer versions of Verilator, and we made changes to the test bench to support extensive Verilog logs on CPU instruction execution.
+This project provides a complete infrastructure for running C programs and operating systems on a 32-bit RISC-V architecture with both ISA simulation and Verilog RTL simulation support.
 
-## Quick Start with Docker Compose
+## Project Structure
 
-The simplest way to run this project is using Docker Compose, which handles all dependencies automatically:
+The project is organized into two separate versions, each with its own Docker configuration and dependencies:
 
-To run the run_c example:
-```bash
-docker compose up run_c
+```
+verilog-c-os/
+├── README.md                   # This file - main project documentation
+├── LICENSE                     # Project license
+├── .gitignore                  # Git ignore patterns
+│
+├── xv6_version/                # xv6-like OS version
+│   ├── README.md               # Documentation for xv6 version
+│   ├── docker-compose.yml      # Docker Compose config for xv6
+│   ├── docker_image/           # Docker image configuration
+│   │   ├── Dockerfile          # Docker image with all dependencies
+│   │   └── entrypoint.sh       # Container entrypoint script
+│   ├── xv6/                    # xv6-like kernel source
+│   │   ├── xv6_kernel.c        # Simplified xv6-like OS kernel
+│   │   ├── startup.s           # Assembly startup code
+│   │   ├── link_script.ld      # Linker script
+│   │   ├── Makefile            # Build system
+│   │   ├── run_xv6.sh          # Run script
+│   │   └── build/              # Build output directory
+│   ├── core/riscv/             # RISC-V processor core (Verilog)
+│   ├── isa_sim/                # ISA simulator (C++ model)
+│   ├── top_tcm_axi/            # Top-level testbench with TCM
+│   └── doc/                    # Documentation images
+│
+└── run_c_version/              # Standalone C programs version
+    ├── README.md               # Documentation for run_c version
+    ├── docker-compose.yml      # Docker Compose config for run_c
+    ├── docker_image/           # Docker image configuration
+    │   ├── Dockerfile          # Docker image with all dependencies
+    │   └── entrypoint.sh       # Container entrypoint script
+    ├── run_c/                  # C program infrastructure
+    │   ├── run.c               # Example C program
+    │   ├── lib/                # Support library
+    │   │   ├── startup.s       # Assembly startup code
+    │   │   ├── link_script.ld  # Linker script
+    │   │   └── utils.c         # Utility functions
+    │   ├── Makefile            # Build system
+    │   ├── run_c_program.sh    # Run script for any C program
+    │   └── build/              # Build output directory
+    ├── core/riscv/             # RISC-V processor core (Verilog)
+    ├── isa_sim/                # ISA simulator (C++ model)
+    ├── top_tcm_axi/            # Top-level testbench with TCM
+    └── doc/                    # Documentation images
 ```
 
-To run the xv6 example:
+## Quick Start
+
+### Running xv6-like OS
+
 ```bash
+cd xv6_version
 docker compose up xv6
 ```
 
-These commands will build the Docker image with all necessary dependencies and run the respective examples in containers.
+### Running C Programs
 
-## Dependencies (Manual Installation)
+```bash
+cd run_c_version
+docker compose up run_c
+```
 
-If you prefer to run the project manually without Docker, the following dependencies are required:
+To run a custom C program:
+```bash
+cd run_c_version
+docker compose run --rm run_c bash -c "cd /workspace/run_c && ./run_c_program.sh your_program.c"
+```
 
-### Build Dependencies
-- **RISC-V GCC Toolchain**: `gcc-riscv64-unknown-elf` or `gcc-riscv32-unknown-elf`
-- **SystemC**: Version 2.3.1 or compatible
-- **Verilator**: For Verilog RTL simulation
-- **Build Tools**: `make`, `g++`, `libelf-dev`, `binutils-dev`
+## Versions
 
-### Installation on Ubuntu/Debian:
+### xv6_version
+This version implements a simplified xv6-like operating system kernel with:
+- Process table management
+- Memory allocation system
+- Basic OS functionality
+- Compatible with 32-bit RISC-V simulation
+
+See [xv6_version/README.md](xv6_version/README.md) for detailed documentation.
+
+### run_c_version
+This version provides infrastructure for running standalone C programs with:
+- Simple compilation to RISC-V ELF
+- Support for custom C programs
+- Reusable library with startup code and linker scripts
+- Simulation control primitives
+
+See [run_c_version/README.md](run_c_version/README.md) for detailed documentation.
+
+## Simulation Modes
+
+Both versions support two simulation modes:
+
+1. **ISA Simulator** - Fast C++ model that executes instructions quickly
+2. **Verilog RTL Simulator** - Cycle-accurate hardware simulation with VCD waveforms
+
+## Dependencies
+
+All dependencies are included in the Docker images:
+- RISC-V GCC toolchain (riscv64-unknown-elf-gcc)
+- SystemC 2.3.3
+- Verilator
+- Build tools (make, g++, libelf-dev, binutils-dev)
+
+## Manual Installation (Without Docker)
+
+If you prefer to run without Docker, install the following dependencies:
+
 ```bash
 # Install RISC-V toolchain
 sudo apt-get install gcc-riscv64-unknown-elf
@@ -38,7 +121,7 @@ wget https://github.com/accellera-official/systemc/releases/download/2.3.3/syste
 tar -xzf systemc-2.3.3.tar.gz
 cd systemc-2.3.3
 mkdir build && cd build
-../configure --prefix=/usr/local/systemc-2.3.1
+../configure --prefix=/usr/local/systemc-2.3.4
 make && sudo make install
 
 # Install Verilator
@@ -48,113 +131,16 @@ sudo apt-get install verilator
 sudo apt-get install build-essential libelf-dev binutils-dev
 ```
 
-Testbench have been reworked a bit.
+## Output Files
 
-## Changes Made to original RISC-V Project
+After running simulations, the `build/` directory in each version will contain:
+- `.elf` - RISC-V executable
+- `.disasm` - Disassembly of the program/kernel
+- `_isa.log` - ISA simulator log
+- `_verilog.log` - Verilog simulator log
+- `_sysc_wave.vcd` - SystemC waveform
+- `_verilator.vcd` - Verilator waveform with internal processor signals
 
-### To work with new verilator version:
-- Updated testbench to handle newer Verilator API requirements
-- Fixed CSR access mechanisms to work with newer SystemC/Verilator versions
-- Modified trace enable mechanism to work after simulation elaboration
-- Updated memory access patterns to avoid invalid memory access errors
+## License
 
-### To track verilog operations:
-- Enabled detailed VCD waveform generation for internal processor signals
-- Added support for both SystemC-level and Verilator-level tracing
-- Created separate VCD files for top-level signals and internal processor signals
-- Waveforms now show detailed internal processor activity including PC, registers, ALU operations, etc.
-
-### Other changes made to project:
-- Created `run_c` directory with complete C program simulation infrastructure
-- Developed startup code and linker scripts for RISC-V programs
-- Implemented simulation control primitives for program exit and output
-- Added comprehensive Makefile with targets for both ISA and Verilog simulation
-- Fixed compatibility issues with newer versions of Verilator and SystemC
-- Created automated script for running C programs on both simulators
-
-## Implemented Features
-
-### run_c Folder
-The `run_c` folder contains a complete infrastructure for running C programs on the RISC-V simulator:
-
-- **Purpose**: Compile and run C programs on both the ISA simulator and Verilog RTL simulation
-- **Contents**:
-  - `run.c`: Template C program that performs computation
-  - `startup.s`: Assembly startup code and interrupt handlers
-  - `link_script.ld`: Linker script for placing code at appropriate addresses
-  - `Makefile`: Complete build system for compilation and simulation
-  - `run_c_program.sh`: Automated script to run C programs on both simulators
-
-### xv6 Folder
-The `xv6` folder contains a simplified xv6-like OS kernel that runs on the RISC-V simulation infrastructure:
-
-- **Purpose**: Demonstrate OS-like functionality on the 32-bit RISC-V simulation platform
-- **Contents**:
-  - `xv6_kernel.c`: Simplified xv6-like kernel with basic OS functionality
-  - `startup.s`: Assembly startup code for 32-bit compatibility
-  - `link_script.ld`: Linker script for proper memory layout
-  - `Makefile`: Build system with targets for both ISA and Verilog simulation
-  - `run_xv6.sh`: Automation script to run simulations
-  - `build/`: Directory for build artifacts including ELF files and VCD waveforms
-
-#### xv6-like Kernel Features:
-- Process table management with basic process states
-- Memory allocation system with a simple memory pool
-- Process creation and tracking functionality
-- Proper exit mechanism using simulation primitives
-- Compatible with 32-bit RISC-V simulation infrastructure
-
-#### xv6 Simulation Usage:
-```bash
-cd xv6
-./run_xv6.sh
-```
-
-This will:
-1. Compile the xv6-like kernel to RISC-V ELF
-2. Run it on the ISA simulator (fast C++ model)
-3. Run it on the Verilog RTL simulator (cycle-accurate hardware model)
-4. Generate VCD waveform files showing internal processor signals during OS execution
-5. Save all results to the `build/` directory
-
-### Usage
-To run a C program:
-```bash
-bash run_c_program.sh my_program.c
-```
-
-This will:
-1. Compile the C program to RISC-V ELF
-2. Run it on the ISA simulator (fast C++ model)
-3. Run it on the Verilog RTL simulator (cycle-accurate hardware model)
-4. Generate VCD waveform files showing internal processor signals
-5. Save all results to the `build/` directory
-
-### run_c/build Directory
-The `build/` directory contains all output files after running a simulation:
-
-- `program.elf`: RISC-V executable file
-- `program.disasm`: Disassembly of the compiled program
-- `program_isa.log`: Log from ISA simulator with execution statistics
-- `program_verilog.log`: Log from Verilog RTL simulator
-- `program_sysc_wave.vcd`: VCD waveform with top-level signals
-- `program_verilator.vcd`: VCD waveform with internal processor signals (PC, registers, ALU, etc.)
-
-### xv6/build Directory
-The `build/` directory in the xv6 folder contains all output files after running the OS simulation:
-
-- `xv6_kernel.elf`: RISC-V executable file for the xv6-like kernel
-- `xv6_kernel.disasm`: Disassembly of the compiled kernel
-- `xv6_kernel.o`: Object file for the kernel code
-- `startup.o`: Object file for the assembly startup code
-- `sysc_wave.vcd`: VCD waveform with top-level interface signals
-- `verilator.vcd`: VCD waveform with internal processor signals (PC, registers, ALU operations, etc.)
-
-### Simulation Modes
-The system runs programs on two different simulators:
-
-1. **ISA Simulator**: Fast C++ model that executes instructions quickly, shows execution statistics
-2. **Verilog RTL Simulator**: Cycle-accurate hardware simulation that generates detailed waveforms showing internal processor operation
-
-Both simulators execute the same program and produce consistent results, allowing for both fast development and detailed hardware analysis.
-
+See [LICENSE](LICENSE) for licensing information.

@@ -1,0 +1,12 @@
+**/*.o
+**/*.x
+**/*.a
+**/*.log
+**/*.vcd
+**/*.disasm
+**/*.elf
+build/
+obj/
+verilated/
+__pycache__/
+*.pyc
