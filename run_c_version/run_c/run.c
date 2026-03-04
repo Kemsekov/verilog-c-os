@@ -3,8 +3,9 @@
 
 int main()
 {
+    print("Starting 3n+1 at x0=17");
     int iterations = 0;
-    int a = 312;
+    int a = 17;
     while(a>1){
         print_int(a);
         if(a%2==0)
