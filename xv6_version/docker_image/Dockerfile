@@ -53,8 +53,13 @@ WORKDIR /workspace
 # Build the ISA simulator inside the container
 COPY isa_sim/ ./isa_sim/
 WORKDIR /workspace/isa_sim
-# Note: Ensure your Makefile uses $SYSTEMC_HOME/include and $SYSTEMC_HOME/lib
 RUN make clean && make
+
+# Copy pre-built Verilog testbench from master branch
+# Note: The testbench was built with SystemC 2.3.1 and Verilator 4.x
+WORKDIR /workspace
+COPY top_tcm_axi/ ./top_tcm_axi/
+COPY core/ ./core/
 
 # Go back to workspace directory
 WORKDIR /workspace

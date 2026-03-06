@@ -1,13 +1,6 @@
 // Simplified xv6-like kernel for RISC-V 32-bit simulation
 
-// Simulation exit primitive
-#define CSR_SIM_CTRL_EXIT (0 << 24)
-
-static inline void sim_exit(int exitcode)
-{
-    unsigned int arg = CSR_SIM_CTRL_EXIT | ((unsigned char)exitcode);
-    asm volatile ("csrw dscratch,%0": : "r" (arg));
-}
+#include "lib/utils.h"
 
 // Basic memory allocation
 static char memory_pool[4096];
@@ -74,28 +67,38 @@ int count_active_processes() {
 int main() {
     // Initialize process table
     init_proc_table();
-    
+
+    print("=== xv6-like kernel starting ===");
+
     // Create some sample processes
     create_process("init");
     create_process("shell");
     create_process("user");
-    
+
     // Perform some basic operations
     int active_count = count_active_processes();
-    
+    print("Active processes:");
+    print_int(active_count);
+
     // Allocate some memory
     void* test_mem = simple_malloc(100);
     if (test_mem) {
+        print("Memory allocation successful");
         // Write some data to allocated memory
         char* ptr = (char*)test_mem;
         for (int i = 0; i < 10; i++) {
             ptr[i] = i + '0';
         }
+    } else {
+        print("Memory allocation failed");
     }
-    
+
     // Calculate a simple result
     int result = active_count * 10 + (test_mem ? 1 : 0);
-    
+
+    print("Kernel completed, exit code:");
+    print_int(result);
+
     // Exit with the result
     sim_exit(result & 0xFF);
     return result;

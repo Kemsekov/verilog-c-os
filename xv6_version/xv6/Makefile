@@ -25,11 +25,14 @@ $(BUILD_DIR):
 $(BUILD_DIR)/startup.o: startup.s | $(BUILD_DIR)
 	$(RISCV_GCC) $(CFLAGS) -c $< -o $@
 
+$(BUILD_DIR)/utils.o: lib/utils.c | $(BUILD_DIR)
+	$(RISCV_GCC) $(CFLAGS) -c $< -o $@
+
 $(BUILD_DIR)/xv6_kernel.o: xv6_kernel.c | $(BUILD_DIR)
 	$(RISCV_GCC) $(CFLAGS) -c $< -o $@
 
-$(BUILD_DIR)/xv6_kernel.elf: $(BUILD_DIR)/xv6_kernel.o $(BUILD_DIR)/startup.o $(BUILD_DIR)/link.ld
-	$(RISCV_GCC) $(CFLAGS) -T $(BUILD_DIR)/link.ld -o $@ $(BUILD_DIR)/startup.o $< -lgcc
+$(BUILD_DIR)/xv6_kernel.elf: $(BUILD_DIR)/xv6_kernel.o $(BUILD_DIR)/utils.o $(BUILD_DIR)/startup.o $(BUILD_DIR)/link.ld
+	$(RISCV_GCC) $(CFLAGS) -T $(BUILD_DIR)/link.ld -o $@ $(BUILD_DIR)/startup.o $(BUILD_DIR)/utils.o $< -lgcc
 	$(RISCV_OBJDUMP) -d $@ > $(BUILD_DIR)/xv6_kernel.disasm
 
 # Linker script for placing code at appropriate address
